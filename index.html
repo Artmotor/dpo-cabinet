@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Динамическая форма | Google Sheets Integration</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --primary-light: #818cf8;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 20% 50%, rgba(255,255,255,0.1) 0%, transparent 50%);
+            pointer-events: none;
+            animation: pulse 10s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.05); }
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .form-card {
+            background: white;
+            border-radius: 32px;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .form-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 30px 60px -12px rgba(0,0,0,0.3);
+        }
+
+        .form-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            padding: 40px 40px 60px 40px;
+            color: white;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .form-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .form-header h1 {
+            font-size: 32px;
+            margin-bottom: 12px;
+            font-weight: 700;
+            position: relative;
+            z-index: 1;
+        }
+
+        .form-header p {
+            font-size: 16px;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .form-content {
+            padding: 40px;
+            background: white;
+        }
+
+        .info-box {
+            background: linear-gradient(135deg, var(--gray-50) 0%, white 100%);
+            border-left: 4px solid var(--primary);
+            padding: 16px 20px;
+            border-radius: 16px;
+            margin-bottom: 32px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            color: var(--gray-600);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .info-icon {
+            font-size: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 28px;
+            animation: slideInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        @keyframes slideInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--gray-700);
+            font-size: 14px;
+            letter-spacing: 0.3px;
+        }
+
+        .required-star {
+            color: var(--danger);
+            margin-left: 4px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--gray-200);
+            border-radius: 12px;
+            font-size: 15px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-family: inherit;
+            background: white;
+            color: var(--gray-900);
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+            transform: translateY(-1px);
+        }
+
+        input.error, select.error, textarea.error {
+            border-color: var(--danger);
+            background: #fef2f2;
+        }
+
+        input.success, select.success, textarea.success {
+            border-color: var(--success);
+            background: #f0fdf4;
+        }
+
+        .error-message {
+            color: var(--danger);
+            font-size: 12px;
+            margin-top: 6px;
+            display: none;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .error-message.show {
+            display: flex;
+        }
+
+        .field-hint {
+            color: var(--gray-400);
+            font-size: 12px;
+            margin-top: 6px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-top: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .submit-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .submit-btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.4);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            border-radius: 32px;
+        }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid var(--gray-200);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            margin-top: 16px;
+            color: var(--gray-600);
+            font-size: 14px;
+        }
+
+        .alert {
+            padding: 16px 20px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .alert-success {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            color: #065f46;
+            border-left: 4px solid var(--success);
+        }
+
+        .alert-error {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            color: #991b1b;
+            border-left: 4px solid var(--danger);
+        }
+
+        .alert-warning {
+            background: linear-gradient(135deg, #fed7aa 0%, #fed7aa 100%);
+            color: #92400e;
+            border-left: 4px solid var(--warning);
+        }
+
+        .alert-icon {
+            font-size: 20px;
+        }
+
+        .alert-close {
+            margin-left: auto;
+            cursor: pointer;
+            font-size: 18px;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+
+        .alert-close:hover {
+            opacity: 1;
+        }
+
+        .char-counter {
+            text-align: right;
+            font-size: 11px;
+            color: var(--gray-400);
+            margin-top: 4px;
+        }
+
+        .cors-warning {
+            background: #fef3c7;
+            border-left-color: var(--warning);
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 16px;
+            }
+
+            .form-header {
+                padding: 30px 20px 40px 20px;
+            }
+
+            .form-header h1 {
+                font-size: 24px;
+            }
+
+            .form-content {
+                padding: 24px;
+            }
+
+            .form-group {
+                margin-bottom: 20px;
+            }
+
+            .submit-btn {
+                padding: 14px;
+            }
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .form-card {
+                background: var(--gray-800);
+            }
+
+            .form-content {
+                background: var(--gray-800);
+            }
+
+            label {
+                color: var(--gray-200);
+            }
+
+            input, select, textarea {
+                background: var(--gray-700);
+                border-color: var(--gray-600);
+                color: white;
+            }
+
+            input:focus, select:focus, textarea:focus {
+                border-color: var(--primary);
+            }
+
+            .info-box {
+                background: var(--gray-700);
+                color: var(--gray-300);
+            }
+
+            .loading-overlay {
+                background: rgba(31, 41, 55, 0.95);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="form-card">
+            <div class="form-header">
+                <div class="header-icon">📊</div>
+                <h1>Динамическая форма ввода</h1>
+                <p>Поля автоматически генерируются из Google Sheets</p>
+            </div>
+            <div class="form-content" id="formContent">
+                <div id="alertContainer"></div>
+
+                <div class="info-box" id="infoBox">
+                    <span class="info-icon">⚡</span>
+                    <span id="infoText">Загрузка полей формы...</span>
+                </div>
+
+                <div id="loadingContainer" style="display: none;">
+                    <div style="text-align: center; padding: 40px;">
+                        <div class="spinner" style="margin: 0 auto;"></div>
+                        <p style="margin-top: 16px; color: var(--gray-500);">Загрузка данных...</p>
+                    </div>
+                </div>
+
+                <form id="dynamicForm" style="display: none;">
+                    <div id="formFields"></div>
+                    <button type="submit" class="submit-btn" id="submitBtn">
+                        💾 Сохранить данные
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== КОНФИГУРАЦИЯ ==========
+        // ЗАМЕНИТЕ НА ВАШ URL (уберите лишние слеши)
+        const N8N_WEBHOOK_URL = 'https://4yzm-gv2z-j6ws.gw-1a.dockhost.net';
+        const GET_FIELDS_ENDPOINT = `${N8N_WEBHOOK_URL}/webhook/get-fields`;
+        const SAVE_DATA_ENDPOINT = `${N8N_WEBHOOK_URL}/webhook/save-data`;
+
+        // Проверяем, что URL корректен
+        console.log('GET Fields URL:', GET_FIELDS_ENDPOINT);
+        console.log('POST Save URL:', SAVE_DATA_ENDPOINT);
+
+        // Глобальные переменные
+        let formFields = [];
+        let isSubmitting = false;
+
+        // Показать уведомление
+        function showAlert(message, type = 'success', duration = 5000) {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertId = 'alert_' + Date.now();
+
+            const icons = {
+                success: '✅',
+                error: '❌',
+                warning: '⚠️'
+            };
+
+            const alertHtml = `
+                <div id="${alertId}" class="alert alert-${type}" style="animation: slideIn 0.3s ease;">
+                    <span class="alert-icon">${icons[type] || 'ℹ️'}</span>
+                    <span>${message}</span>
+                    <span class="alert-close" onclick="closeAlert('${alertId}')">✕</span>
+                </div>
+            `;
+
+            alertContainer.insertAdjacentHTML('beforeend', alertHtml);
+
+            if (duration > 0) {
+                setTimeout(() => closeAlert(alertId), duration);
+            }
+        }
+
+        function closeAlert(alertId) {
+            const alert = document.getElementById(alertId);
+            if (alert) {
+                alert.style.animation = 'slideIn 0.3s ease reverse';
+                setTimeout(() => alert.remove(), 300);
+            }
+        }
+
+        // Показать/скрыть загрузку
+        function showLoading(show) {
+            const loadingContainer = document.getElementById('loadingContainer');
+            const form = document.getElementById('dynamicForm');
+            const infoBox = document.getElementById('infoBox');
+
+            if (show) {
+                loadingContainer.style.display = 'block';
+                form.style.display = 'none';
+                if (infoBox) infoBox.style.display = 'none';
+            } else {
+                loadingContainer.style.display = 'none';
+                form.style.display = 'block';
+                if (infoBox) infoBox.style.display = 'flex';
+            }
+        }
+
+        // Валидация поля
+        function validateField(fieldId) {
+            const input = document.getElementById(fieldId);
+            const errorDiv = document.getElementById(`${fieldId}-error`);
+            const field = formFields.find(f => f.id === fieldId);
+
+            if (!input || !errorDiv || !field) return true;
+
+            let isValid = true;
+            let errorMessage = '';
+            const value = input.value.trim();
+
+            if (field.required && !value) {
+                isValid = false;
+                errorMessage = 'Это поле обязательно для заполнения';
+            } else if (field.type === 'email' && value) {
+                const emailRegex = /^[^\s@]+@([^\s@]+\.)+[^\s@]+$/;
+                if (!emailRegex.test(value)) {
+                    isValid = false;
+                    errorMessage = 'Введите корректный email адрес (example@domain.com)';
+                }
+            } else if (field.type === 'tel' && value) {
+                const phoneRegex = /^[\d\s+()-]{10,}$/;
+                if (!phoneRegex.test(value)) {
+                    isValid = false;
+                    errorMessage = 'Введите корректный номер телефона (минимум 10 цифр)';
+                }
+            } else if (field.type === 'number' && value) {
+                if (isNaN(value)) {
+                    isValid = false;
+                    errorMessage = 'Введите число';
+                }
+            }
+
+            if (!isValid) {
+                input.classList.add('error');
+                input.classList.remove('success');
+                errorDiv.textContent = errorMessage;
+                errorDiv.classList.add('show');
+            } else {
+                input.classList.remove('error');
+                input.classList.add('success');
+                errorDiv.classList.remove('show');
+            }
+
+            return isValid;
+        }
+
+        // Валидация всей формы
+        function validateForm() {
+            let isValid = true;
+            formFields.forEach(field => {
+                if (!validateField(field.id)) {
+                    isValid = false;
+                }
+            });
+            return isValid;
+        }
+
+        // Рендеринг формы
+        function renderForm(fields) {
+            const formFieldsContainer = document.getElementById('formFields');
+            formFieldsContainer.innerHTML = '';
+
+            fields.forEach((field, index) => {
+                const formGroup = document.createElement('div');
+                formGroup.className = 'form-group';
+                formGroup.style.animationDelay = `${index * 0.05}s`;
+
+                const label = document.createElement('label');
+                label.htmlFor = field.id;
+                label.textContent = field.label;
+                if (field.required) {
+                    const star = document.createElement('span');
+                    star.className = 'required-star';
+                    star.textContent = ' *';
+                    label.appendChild(star);
+                }
+
+                let input;
+                if (field.type === 'textarea') {
+                    input = document.createElement('textarea');
+                    input.rows = field.rows || 4;
+                } else if (field.type === 'select' && field.options) {
+                    input = document.createElement('select');
+                    field.options.forEach(opt => {
+                        const option = document.createElement('option');
+                        option.value = opt.value;
+                        option.textContent = opt.label;
+                        input.appendChild(option);
+                    });
+                } else {
+                    input = document.createElement('input');
+                    input.type = field.type || 'text';
+                    input.placeholder = field.placeholder || `Введите ${field.label.toLowerCase()}`;
+                }
+
+                input.id = field.id;
+                input.name = field.id;
+                input.required = field.required;
+
+                if (field.pattern) input.pattern = field.pattern;
+                if (field.minLength) input.minLength = field.minLength;
+                if (field.maxLength) input.maxLength = field.maxLength;
+
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error-message';
+                errorDiv.id = `${field.id}-error`;
+                errorDiv.innerHTML = '<span>⚠️</span><span></span>';
+
+                formGroup.appendChild(label);
+                formGroup.appendChild(input);
+                formGroup.appendChild(errorDiv);
+                formFieldsContainer.appendChild(formGroup);
+
+                input.addEventListener('input', () => validateField(field.id));
+                input.addEventListener('blur', () => validateField(field.id));
+                input.addEventListener('change', () => validateField(field.id));
+            });
+        }
+
+        // Загрузка полей из Google Sheets
+        async function loadFields() {
+            showLoading(true);
+
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+                // Используем mode: 'cors' для явного указания CORS
+                const response = await fetch(GET_FIELDS_ENDPOINT, {
+                    method: 'GET',
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    signal: controller.signal
+                });
+
+                clearTimeout(timeoutId);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                console.log('Loaded fields data:', data);
+
+                if (data.fields && Array.isArray(data.fields)) {
+                    formFields = data.fields;
+                } else if (Array.isArray(data)) {
+                    formFields = data;
+                } else {
+                    throw new Error('Неверный формат данных от сервера');
+                }
+
+                if (formFields.length === 0) {
+                    throw new Error('Нет полей для отображения. Проверьте вторую строку в Google Sheets');
+                }
+
+                renderForm(formFields);
+
+                const infoText = document.getElementById('infoText');
+                infoText.innerHTML = `📋 Найдено ${formFields.length} полей для заполнения`;
+
+                showLoading(false);
+
+                setTimeout(() => {
+                    showAlert('Форма успешно загружена! Заполните все поля', 'success', 3000);
+                }, 500);
+
+            } catch (error) {
+                console.error('Error loading fields:', error);
+
+                let errorMessage = '';
+                if (error.name === 'AbortError') {
+                    errorMessage = 'Превышено время ожидания. Проверьте подключение к n8n';
+                } else if (error.message.includes('Failed to fetch')) {
+                    errorMessage = 'Не удается подключиться к серверу. Проверьте CORS настройки в n8n и URL. Убедитесь, что в URL нет двойных слешей.';
+                } else {
+                    errorMessage = error.message;
+                }
+
+                showAlert(errorMessage, 'error', 8000);
+
+                const infoText = document.getElementById('infoText');
+                infoText.innerHTML = '❌ Ошибка загрузки формы. Проверьте консоль для деталей';
+                infoText.style.color = 'var(--danger)';
+
+                showLoading(false);
+            }
+        }
+
+        // Отправка данных
+        async function submitForm(event) {
+            event.preventDefault();
+
+            if (isSubmitting) {
+                showAlert('Данные уже отправляются, пожалуйста, подождите', 'warning', 2000);
+                return;
+            }
+
+            if (!validateForm()) {
+                showAlert('Пожалуйста, исправьте ошибки в форме перед отправкой', 'error', 4000);
+                const firstError = document.querySelector('.error');
+                if (firstError) {
+                    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    firstError.focus();
+                }
+                return;
+            }
+
+            isSubmitting = true;
+            const submitBtn = document.getElementById('submitBtn');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<span class="spinner" style="width: 20px; height: 20px; border-width: 2px; display: inline-block; vertical-align: middle; margin-right: 8px;"></span> Сохранение...';
+            submitBtn.disabled = true;
+
+            try {
+                const formData = [];
+                let hasData = false;
+
+                formFields.forEach(field => {
+                    const input = document.getElementById(field.id);
+                    if (input) {
+                        const value = input.value.trim();
+                        if (value) hasData = true;
+                        formData.push({
+                            id: field.id,
+                            value: value,
+                            label: field.label
+                        });
+                    }
+                });
+
+                if (!hasData) {
+                    throw new Error('Заполните хотя бы одно поле перед отправкой');
+                }
+
+                const payload = {
+                    fields: formData,
+                    timestamp: new Date().toISOString(),
+                    userAgent: navigator.userAgent
+                };
+
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+                const response = await fetch(SAVE_DATA_ENDPOINT, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(payload),
+                    signal: controller.signal
+                });
+
+                clearTimeout(timeoutId);
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${errorText || response.statusText}`);
+                }
+
+                const result = await response.json();
+                console.log('Save result:', result);
+
+                if (result.success === true || result.success === undefined) {
+                    showAlert('✅ Данные успешно сохранены в Google Sheets!', 'success', 5000);
+
+                    formFields.forEach(field => {
+                        const input = document.getElementById(field.id);
+                        if (input && input.type !== 'select') {
+                            input.value = '';
+                            input.classList.remove('success');
+                        }
+                    });
+
+                    submitBtn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+                    setTimeout(() => {
+                        submitBtn.style.background = '';
+                    }, 1000);
+
+                } else {
+                    throw new Error(result.message || 'Неизвестная ошибка при сохранении');
+                }
+
+            } catch (error) {
+                console.error('Error saving data:', error);
+
+                let errorMessage = '';
+                if (error.name === 'AbortError') {
+                    errorMessage = 'Превышено время ожидания ответа от сервера';
+                } else if (error.message.includes('Failed to fetch')) {
+                    errorMessage = 'Не удается подключиться к серверу. Проверьте CORS настройки в n8n';
+                } else {
+                    errorMessage = error.message;
+                }
+
+                showAlert(errorMessage, 'error', 7000);
+
+            } finally {
+                isSubmitting = false;
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        }
+
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('App started');
+            console.log('Current origin:', window.location.origin);
+            console.log('Fetching from:', GET_FIELDS_ENDPOINT);
+
+            await loadFields();
+            document.getElementById('dynamicForm').addEventListener('submit', submitForm);
+        });
+    </script>
+</body>
+</html>
