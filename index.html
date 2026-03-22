@@ -29,7 +29,7 @@
         .content { padding: 30px; }
         .form-group { margin-bottom: 20px; }
         label { display: block; margin-bottom: 8px; font-weight: 600; color: #333; }
-        input, textarea {
+        input {
             width: 100%;
             padding: 12px;
             border: 2px solid #e0e0e0;
@@ -37,7 +37,7 @@
             font-size: 14px;
             transition: all 0.3s;
         }
-        input:focus, textarea:focus {
+        input:focus {
             outline: none;
             border-color: #667eea;
         }
@@ -53,10 +53,9 @@
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            transition: transform 0.2s;
         }
         button:hover { transform: translateY(-2px); }
-        button:disabled { opacity: 0.6; cursor: not-allowed; }
+        button:disabled { opacity: 0.6; }
         .spinner {
             width: 40px;
             height: 40px;
@@ -71,9 +70,7 @@
             padding: 12px 16px;
             border-radius: 8px;
             margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            display: none;
         }
         .alert-success { background: #c6f6d5; color: #22543d; }
         .alert-error { background: #fed7d7; color: #742a2a; }
@@ -83,7 +80,6 @@
             border-radius: 8px;
             margin-bottom: 20px;
             font-size: 14px;
-            color: #4a5568;
             border-left: 4px solid #667eea;
         }
         .mode-switch {
@@ -95,17 +91,14 @@
             flex: 1;
             padding: 10px;
             background: #f7fafc;
-            color: #4a5568;
             border: 2px solid #e2e8f0;
+            cursor: pointer;
+            border-radius: 8px;
         }
         .mode-btn.active {
             background: #667eea;
             color: white;
             border-color: #667eea;
-        }
-        @media (max-width: 768px) {
-            .header h1 { font-size: 24px; }
-            .content { padding: 20px; }
         }
     </style>
 </head>
@@ -121,25 +114,25 @@
                 <button class="mode-btn active" onclick="setMode('remote')">🌐 Удаленный</button>
                 <button class="mode-btn" onclick="setMode('test')">🧪 Тестовый</button>
             </div>
-            <div id="alert"></div>
+            <div id="alert" class="alert"></div>
             <div class="info-box" id="infoBox">⚡ Загрузка полей...</div>
             <div id="loading"><div class="spinner"></div></div>
             <form id="form" style="display: none;">
                 <div id="fields"></div>
-                <button type="submit" id="submitBtn">💾 Сохранить</button>
+                <button type="submit" id="submitBtn">💾 Сохранить данные</button>
             </form>
         </div>
     </div>
 </div>
 
 <script>
-// ========== PRODUCTION URL ==========
-// ЗАМЕНИТЕ НА ВАШИ PRODUCTION URL ПОСЛЕ АКТИВАЦИИ WEBHOOK
+// ========== ВАШИ PRODUCTION URL ==========
+// ВСТАВЬТЕ СЮДА URL, КОТОРЫЕ ВЫ СКОПИРОВАЛИ ИЗ n8n
 const PRODUCTION_URL = 'https://4yzm-gv2z-j6ws.gw-1a.dockhost.net';
 const GET_FIELDS_URL = `${PRODUCTION_URL}/webhook/get-fields`;
 const SAVE_DATA_URL = `${PRODUCTION_URL}/webhook/save-data`;
 
-// Тестовые данные
+// Тестовые данные (для проверки интерфейса)
 const TEST_FIELDS = [
     { id: "email", label: "Email", type: "email", required: true, placeholder: "example@mail.com" },
     { id: "name", label: "Имя", type: "text", required: true, placeholder: "Ваше имя" },
@@ -161,7 +154,7 @@ function showAlert(msg, type) {
     const alertDiv = document.getElementById('alert');
     alertDiv.className = `alert alert-${type}`;
     alertDiv.innerHTML = `<span>${type === 'success' ? '✅' : '❌'}</span><span>${msg}</span>`;
-    alertDiv.style.display = 'flex';
+    alertDiv.style.display = 'block';
     setTimeout(() => alertDiv.style.display = 'none', 5000);
 }
 
@@ -177,7 +170,6 @@ function renderForm(fields) {
     fields.forEach((field, i) => {
         const div = document.createElement('div');
         div.className = 'form-group';
-        div.style.animation = `slideInUp 0.3s ease ${i * 0.05}s forwards`;
         div.innerHTML = `
             <label>${field.label}${field.required ? '<span style="color:#f56565"> *</span>' : ''}</label>
             <input type="${field.type}" id="${field.id}" placeholder="${field.placeholder}" ${field.required ? 'required' : ''}>
