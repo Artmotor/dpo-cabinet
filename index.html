@@ -25,7 +25,6 @@
             padding: 30px;
             text-align: center;
         }
-        .header h1 { font-size: 28px; margin-bottom: 8px; }
         .content { padding: 30px; }
         .form-group { margin-bottom: 20px; }
         label { display: block; margin-bottom: 8px; font-weight: 600; color: #333; }
@@ -35,7 +34,6 @@
             border: 2px solid #e0e0e0;
             border-radius: 8px;
             font-size: 14px;
-            transition: all 0.3s;
         }
         input:focus {
             outline: none;
@@ -55,7 +53,6 @@
             cursor: pointer;
         }
         button:hover { transform: translateY(-2px); }
-        button:disabled { opacity: 0.6; }
         .spinner {
             width: 40px;
             height: 40px;
@@ -67,7 +64,7 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
         .alert {
-            padding: 12px 16px;
+            padding: 12px;
             border-radius: 8px;
             margin-bottom: 20px;
             display: none;
@@ -79,7 +76,6 @@
             padding: 12px;
             border-radius: 8px;
             margin-bottom: 20px;
-            font-size: 14px;
             border-left: 4px solid #667eea;
         }
         .mode-switch {
@@ -126,13 +122,12 @@
 </div>
 
 <script>
-// ========== ВАШИ PRODUCTION URL ==========
-// ВСТАВЬТЕ СЮДА URL, КОТОРЫЕ ВЫ СКОПИРОВАЛИ ИЗ n8n
+// ========== НАСТРОЙКА ==========
+// Используем тот же URL, что и в n8n
 const PRODUCTION_URL = 'https://4yzm-gv2z-j6ws.gw-1a.dockhost.net';
 const GET_FIELDS_URL = `${PRODUCTION_URL}/webhook/get-fields`;
 const SAVE_DATA_URL = `${PRODUCTION_URL}/webhook/save-data`;
 
-// Тестовые данные (для проверки интерфейса)
 const TEST_FIELDS = [
     { id: "email", label: "Email", type: "email", required: true, placeholder: "example@mail.com" },
     { id: "name", label: "Имя", type: "text", required: true, placeholder: "Ваше имя" },
@@ -167,7 +162,7 @@ function showLoading(show) {
 function renderForm(fields) {
     const container = document.getElementById('fields');
     container.innerHTML = '';
-    fields.forEach((field, i) => {
+    fields.forEach((field) => {
         const div = document.createElement('div');
         div.className = 'form-group';
         div.innerHTML = `
@@ -211,7 +206,7 @@ async function loadFieldsRemote() {
     });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const text = await response.text();
-    if (!text) throw new Error('Пустой ответ');
+    if (!text || text.trim() === '') throw new Error('Пустой ответ от сервера');
     const data = JSON.parse(text);
     return data.fields || data;
 }
@@ -224,23 +219,23 @@ async function loadFields() {
         } else {
             formFields = TEST_FIELDS;
         }
-        if (!formFields || formFields.length === 0) throw new Error('Нет полей');
+        if (!formFields || formFields.length === 0) throw new Error('Нет полей для отображения');
         renderForm(formFields);
         document.getElementById('infoBox').innerHTML = `📋 Найдено ${formFields.length} полей`;
         showLoading(false);
         showAlert(`Форма загружена (${currentMode === 'remote' ? 'удаленный' : 'тестовый'} режим)`, 'success');
     } catch (err) {
-        console.error(err);
-        document.getElementById('infoBox').innerHTML = '❌ Ошибка загрузки. Проверьте URL и CORS';
+        console.error('Load error:', err);
+        document.getElementById('infoBox').innerHTML = `❌ Ошибка: ${err.message}. Проверьте: 1) Webhook активен 2) URL правильный 3) CORS настроен`;
         showLoading(false);
-        showAlert(`Ошибка: ${err.message}`, 'error');
+        showAlert(`Ошибка загрузки: ${err.message}`, 'error');
     }
 }
 
 async function submitForm(e) {
     e.preventDefault();
     if (isSubmitting) return;
-    if (!validateForm()) { showAlert('Исправьте ошибки', 'error'); return; }
+    if (!validateForm()) { showAlert('Исправьте ошибки в форме', 'error'); return; }
     isSubmitting = true;
     const btn = document.getElementById('submitBtn');
     const originalText = btn.innerHTML;
@@ -250,7 +245,7 @@ async function submitForm(e) {
         const data = [];
         formFields.forEach(f => {
             const input = document.getElementById(f.id);
-            if (input) data.push({ id: f.id, value: input.value.trim() });
+            if (input && input.value.trim()) data.push({ id: f.id, value: input.value.trim() });
         });
         if (currentMode === 'test') {
             showAlert('Тестовый режим: данные не отправлены', 'success');
@@ -264,7 +259,7 @@ async function submitForm(e) {
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const result = await response.json();
             if (result.success !== false) {
-                showAlert('✅ Данные сохранены!', 'success');
+                showAlert('✅ Данные сохранены в Google Sheets!', 'success');
                 formFields.forEach(f => { const inp = document.getElementById(f.id); if (inp) inp.value = ''; });
             } else throw new Error(result.message || 'Ошибка');
         }
