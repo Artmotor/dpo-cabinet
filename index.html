@@ -3,279 +3,547 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Динамическая форма</title>
+    <title>Динамическая форма - Google Sheets Integration</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
         }
-        .container { max-width: 800px; margin: 0 auto; }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
         .card {
             background: white;
             border-radius: 24px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             overflow: hidden;
+            animation: slideUp 0.5s ease-out;
         }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             padding: 30px;
             text-align: center;
         }
-        .content { padding: 30px; }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; font-weight: 600; color: #333; }
-        input {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
             font-size: 14px;
         }
-        input:focus {
-            outline: none;
+
+        .content {
+            padding: 30px;
+        }
+
+        .mode-switch {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 12px;
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            cursor: pointer;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .mode-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .mode-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
             border-color: #667eea;
         }
-        input.error { border-color: #f56565; background: #fff5f5; }
-        .error-message { color: #f56565; font-size: 12px; margin-top: 5px; display: none; }
+
+        .info-box {
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+            font-size: 14px;
+        }
+
+        .alert {
+            padding: 12px 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .alert-success {
+            background: #c6f6d5;
+            color: #22543d;
+            border-left: 4px solid #48bb78;
+        }
+
+        .alert-error {
+            background: #fed7d7;
+            color: #742a2a;
+            border-left: 4px solid #f56565;
+        }
+
+        .alert-info {
+            background: #bee3f8;
+            color: #2c5282;
+            border-left: 4px solid #4299e1;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 14px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        input.error {
+            border-color: #f56565;
+            background: #fff5f5;
+        }
+
+        .error-message {
+            color: #f56565;
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+
         button {
             width: 100%;
             padding: 14px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
+            transition: all 0.3s;
         }
-        button:hover { transform: translateY(-2px); }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
         .spinner {
             width: 40px;
             height: 40px;
             border: 3px solid #f3f3f3;
-            border-top-color: #667eea;
+            border-top: 3px solid #667eea;
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin: 20px auto;
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .alert {
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: none;
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
-        .alert-success { background: #c6f6d5; color: #22543d; }
-        .alert-error { background: #fed7d7; color: #742a2a; }
-        .info-box {
+
+        .loading-text {
+            text-align: center;
+            color: #718096;
+            margin-top: 10px;
+        }
+
+        .stats {
+            margin-top: 20px;
+            padding: 15px;
             background: #f7fafc;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border-left: 4px solid #667eea;
+            border-radius: 10px;
+            font-size: 12px;
+            color: #718096;
+            text-align: center;
         }
-        .mode-switch {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        .mode-btn {
-            flex: 1;
-            padding: 10px;
-            background: #f7fafc;
-            border: 2px solid #e2e8f0;
-            cursor: pointer;
-            border-radius: 8px;
-        }
-        .mode-btn.active {
-            background: #667eea;
-            color: white;
-            border-color: #667eea;
+
+        @media (max-width: 640px) {
+            .content {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
         }
     </style>
 </head>
 <body>
-<div class="container">
-    <div class="card">
-        <div class="header">
-            <h1>📊 Динамическая форма</h1>
-            <p>Поля из Google Sheets</p>
-        </div>
-        <div class="content">
-            <div class="mode-switch">
-                <button class="mode-btn active" onclick="setMode('remote')">🌐 Удаленный</button>
-                <button class="mode-btn" onclick="setMode('test')">🧪 Тестовый</button>
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <h1>📊 Динамическая форма</h1>
+                <p>Поля автоматически загружаются из Google Sheets</p>
             </div>
-            <div id="alert" class="alert"></div>
-            <div class="info-box" id="infoBox">⚡ Загрузка полей...</div>
-            <div id="loading"><div class="spinner"></div></div>
-            <form id="form" style="display: none;">
-                <div id="fields"></div>
-                <button type="submit" id="submitBtn">💾 Сохранить данные</button>
-            </form>
+            <div class="content">
+                <div class="mode-switch">
+                    <button class="mode-btn active" onclick="setMode('remote')">🌐 Удаленный режим</button>
+                    <button class="mode-btn" onclick="setMode('test')">🧪 Тестовый режим</button>
+                </div>
+                
+                <div id="alert" class="alert"></div>
+                
+                <div class="info-box" id="infoBox">
+                    ⚡ Инициализация...
+                </div>
+                
+                <div id="loading">
+                    <div class="spinner"></div>
+                    <div class="loading-text">Загрузка полей формы...</div>
+                </div>
+                
+                <form id="form" style="display: none;">
+                    <div id="fields"></div>
+                    <button type="submit" id="submitBtn">💾 Сохранить данные</button>
+                </form>
+                
+                <div class="stats" id="stats" style="display: none;">
+                    Статус: <span id="statusText">Готов к работе</span>
+                </div>
+            </div>
         </div>
     </div>
-</div>
 
-<script>
-// ========== НАСТРОЙКА ==========
-// Используем тот же URL, что и в n8n
-const PRODUCTION_URL = 'https://4yzm-gv2z-j6ws.gw-1a.dockhost.net';
-const GET_FIELDS_URL = `${PRODUCTION_URL}/webhook/get-fields`;
-const SAVE_DATA_URL = `${PRODUCTION_URL}/webhook/save-data`;
+    <script>
+        // Автоматическое определение URL
+        const PRODUCTION_URL = window.location.origin;
+        const GET_FIELDS_URL = `${PRODUCTION_URL}/webhook/get-fields`;
+        const SAVE_DATA_URL = `${PRODUCTION_URL}/webhook/save-data`;
 
-const TEST_FIELDS = [
-    { id: "email", label: "Email", type: "email", required: true, placeholder: "example@mail.com" },
-    { id: "name", label: "Имя", type: "text", required: true, placeholder: "Ваше имя" },
-    { id: "phone", label: "Телефон", type: "tel", required: true, placeholder: "+7 (999) 123-45-67" }
-];
+        // Тестовые поля
+        const TEST_FIELDS = [
+            { id: "email", label: "Email", type: "email", required: true, placeholder: "example@mail.com" },
+            { id: "name", label: "Имя", type: "text", required: true, placeholder: "Ваше имя" },
+            { id: "phone", label: "Телефон", type: "tel", required: true, placeholder: "+7 (999) 123-45-67" },
+            { id: "message", label: "Сообщение", type: "text", required: false, placeholder: "Ваше сообщение" }
+        ];
 
-let currentMode = 'remote';
-let formFields = [];
-let isSubmitting = false;
+        let currentMode = 'remote';
+        let formFields = [];
+        let isSubmitting = false;
 
-function setMode(mode) {
-    currentMode = mode;
-    document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
-    event.target.classList.add('active');
-    loadFields();
-}
-
-function showAlert(msg, type) {
-    const alertDiv = document.getElementById('alert');
-    alertDiv.className = `alert alert-${type}`;
-    alertDiv.innerHTML = `<span>${type === 'success' ? '✅' : '❌'}</span><span>${msg}</span>`;
-    alertDiv.style.display = 'block';
-    setTimeout(() => alertDiv.style.display = 'none', 5000);
-}
-
-function showLoading(show) {
-    document.getElementById('loading').style.display = show ? 'block' : 'none';
-    document.getElementById('form').style.display = show ? 'none' : 'block';
-    document.getElementById('infoBox').style.display = show ? 'none' : 'flex';
-}
-
-function renderForm(fields) {
-    const container = document.getElementById('fields');
-    container.innerHTML = '';
-    fields.forEach((field) => {
-        const div = document.createElement('div');
-        div.className = 'form-group';
-        div.innerHTML = `
-            <label>${field.label}${field.required ? '<span style="color:#f56565"> *</span>' : ''}</label>
-            <input type="${field.type}" id="${field.id}" placeholder="${field.placeholder}" ${field.required ? 'required' : ''}>
-            <div class="error-message" id="${field.id}-error"></div>
-        `;
-        container.appendChild(div);
-        const input = document.getElementById(field.id);
-        input.addEventListener('input', () => validateField(field.id));
-        input.addEventListener('blur', () => validateField(field.id));
-    });
-}
-
-function validateField(fieldId) {
-    const input = document.getElementById(fieldId);
-    const errorDiv = document.getElementById(`${fieldId}-error`);
-    const field = formFields.find(f => f.id === fieldId);
-    if (!input || !field) return true;
-    const value = input.value.trim();
-    let isValid = true;
-    let msg = '';
-    if (field.required && !value) { isValid = false; msg = 'Обязательное поле'; }
-    else if (field.type === 'email' && value && !/^[^\s@]+@([^\s@]+\.)+[^\s@]+$/.test(value)) { isValid = false; msg = 'Неверный email'; }
-    else if (field.type === 'tel' && value && !/^[\d\s+()-]{10,}$/.test(value)) { isValid = false; msg = 'Неверный телефон'; }
-    if (!isValid) { input.classList.add('error'); errorDiv.textContent = msg; errorDiv.style.display = 'block'; }
-    else { input.classList.remove('error'); errorDiv.style.display = 'none'; }
-    return isValid;
-}
-
-function validateForm() {
-    let valid = true;
-    formFields.forEach(f => { if (!validateField(f.id)) valid = false; });
-    return valid;
-}
-
-async function loadFieldsRemote() {
-    const response = await fetch(GET_FIELDS_URL, {
-        method: 'GET',
-        headers: { 'Accept': 'application/json' }
-    });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const text = await response.text();
-    if (!text || text.trim() === '') throw new Error('Пустой ответ от сервера');
-    const data = JSON.parse(text);
-    return data.fields || data;
-}
-
-async function loadFields() {
-    showLoading(true);
-    try {
-        if (currentMode === 'remote') {
-            formFields = await loadFieldsRemote();
-        } else {
-            formFields = TEST_FIELDS;
-        }
-        if (!formFields || formFields.length === 0) throw new Error('Нет полей для отображения');
-        renderForm(formFields);
-        document.getElementById('infoBox').innerHTML = `📋 Найдено ${formFields.length} полей`;
-        showLoading(false);
-        showAlert(`Форма загружена (${currentMode === 'remote' ? 'удаленный' : 'тестовый'} режим)`, 'success');
-    } catch (err) {
-        console.error('Load error:', err);
-        document.getElementById('infoBox').innerHTML = `❌ Ошибка: ${err.message}. Проверьте: 1) Webhook активен 2) URL правильный 3) CORS настроен`;
-        showLoading(false);
-        showAlert(`Ошибка загрузки: ${err.message}`, 'error');
-    }
-}
-
-async function submitForm(e) {
-    e.preventDefault();
-    if (isSubmitting) return;
-    if (!validateForm()) { showAlert('Исправьте ошибки в форме', 'error'); return; }
-    isSubmitting = true;
-    const btn = document.getElementById('submitBtn');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '⏳ Сохранение...';
-    btn.disabled = true;
-    try {
-        const data = [];
-        formFields.forEach(f => {
-            const input = document.getElementById(f.id);
-            if (input && input.value.trim()) data.push({ id: f.id, value: input.value.trim() });
-        });
-        if (currentMode === 'test') {
-            showAlert('Тестовый режим: данные не отправлены', 'success');
-            formFields.forEach(f => { const inp = document.getElementById(f.id); if (inp) inp.value = ''; });
-        } else {
-            const response = await fetch(SAVE_DATA_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ fields: data, timestamp: new Date().toISOString() })
+        function setMode(mode) {
+            currentMode = mode;
+            const buttons = document.querySelectorAll('.mode-btn');
+            buttons.forEach(btn => {
+                if (btn.textContent.includes(mode === 'remote' ? 'Удаленный' : 'Тестовый')) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
             });
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            const result = await response.json();
-            if (result.success !== false) {
-                showAlert('✅ Данные сохранены в Google Sheets!', 'success');
-                formFields.forEach(f => { const inp = document.getElementById(f.id); if (inp) inp.value = ''; });
-            } else throw new Error(result.message || 'Ошибка');
+            loadFields();
         }
-    } catch (err) {
-        showAlert(`Ошибка: ${err.message}`, 'error');
-    } finally {
-        isSubmitting = false;
-        btn.innerHTML = originalText;
-        btn.disabled = false;
-    }
-}
 
-document.addEventListener('DOMContentLoaded', () => {
-    loadFields();
-    document.getElementById('form').addEventListener('submit', submitForm);
-});
-</script>
+        function showAlert(msg, type) {
+            const alertDiv = document.getElementById('alert');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.innerHTML = msg;
+            alertDiv.style.display = 'block';
+            setTimeout(() => {
+                alertDiv.style.opacity = '0';
+                setTimeout(() => {
+                    alertDiv.style.display = 'none';
+                    alertDiv.style.opacity = '1';
+                }, 300);
+            }, 5000);
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+            document.getElementById('form').style.display = show ? 'none' : 'block';
+            document.getElementById('stats').style.display = show ? 'none' : 'block';
+        }
+
+        function renderForm(fields) {
+            const container = document.getElementById('fields');
+            container.innerHTML = '';
+            
+            fields.forEach((field, index) => {
+                const div = document.createElement('div');
+                div.className = 'form-group';
+                div.style.animation = `slideUp 0.3s ease-out ${index * 0.05}s both`;
+                
+                const requiredMark = field.required ? '<span style="color:#f56565"> *</span>' : '';
+                
+                div.innerHTML = `
+                    <label>${field.label}${requiredMark}</label>
+                    <input 
+                        type="${field.type}" 
+                        id="${field.id}" 
+                        name="${field.id}"
+                        placeholder="${field.placeholder || ''}" 
+                        ${field.required ? 'required' : ''}
+                        autocomplete="off"
+                    >
+                    <div class="error-message" id="${field.id}-error"></div>
+                `;
+                container.appendChild(div);
+                
+                const input = document.getElementById(field.id);
+                input.addEventListener('input', () => validateField(field.id));
+                input.addEventListener('blur', () => validateField(field.id));
+            });
+        }
+
+        function validateField(fieldId) {
+            const input = document.getElementById(fieldId);
+            const errorDiv = document.getElementById(`${fieldId}-error`);
+            const field = formFields.find(f => f.id === fieldId);
+            
+            if (!input || !field) return true;
+            
+            const value = input.value.trim();
+            let isValid = true;
+            let msg = '';
+            
+            if (field.required && !value) {
+                isValid = false;
+                msg = '⚠️ Это поле обязательно для заполнения';
+            } else if (field.type === 'email' && value && !/^[^\s@]+@([^\s@]+\.)+[^\s@]+$/.test(value)) {
+                isValid = false;
+                msg = '❌ Введите корректный email (example@mail.com)';
+            } else if (field.type === 'tel' && value && !/^[\d\s+()-]{10,}$/.test(value)) {
+                isValid = false;
+                msg = '❌ Введите корректный номер телефона';
+            }
+            
+            if (!isValid) {
+                input.classList.add('error');
+                errorDiv.textContent = msg;
+                errorDiv.style.display = 'block';
+            } else {
+                input.classList.remove('error');
+                errorDiv.style.display = 'none';
+            }
+            
+            return isValid;
+        }
+
+        function validateForm() {
+            let valid = true;
+            formFields.forEach(field => {
+                if (!validateField(field.id)) valid = false;
+            });
+            return valid;
+        }
+
+        async function loadFieldsRemote() {
+            try {
+                const response = await fetch(GET_FIELDS_URL, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                return data.fields || data;
+            } catch (error) {
+                console.error('Load fields error:', error);
+                throw error;
+            }
+        }
+
+        async function loadFields() {
+            showLoading(true);
+            document.getElementById('infoBox').innerHTML = '🔄 Загрузка полей формы...';
+            
+            try {
+                if (currentMode === 'remote') {
+                    formFields = await loadFieldsRemote();
+                    if (!formFields || formFields.length === 0) {
+                        throw new Error('Нет полей для отображения');
+                    }
+                    document.getElementById('infoBox').innerHTML = `✅ Успешно загружено ${formFields.length} полей из Google Sheets`;
+                    showAlert(`✅ Форма загружена (${formFields.length} полей)`, 'success');
+                } else {
+                    formFields = TEST_FIELDS;
+                    document.getElementById('infoBox').innerHTML = `🧪 Тестовый режим: ${formFields.length} полей`;
+                    showAlert('🧪 Тестовый режим: данные не будут отправлены на сервер', 'info');
+                }
+                
+                renderForm(formFields);
+                showLoading(false);
+                document.getElementById('statusText').textContent = `Готов (${currentMode === 'remote' ? 'удаленный' : 'тестовый'} режим)`;
+                
+            } catch (err) {
+                console.error('Load error:', err);
+                document.getElementById('infoBox').innerHTML = `❌ Ошибка загрузки: ${err.message}<br><br>💡 Проверьте:<br>• Активен ли webhook в n8n<br>• Правильный ли URL<br>• Настроен ли CORS<br>• Есть ли данные в Google Sheets`;
+                showAlert(`❌ Ошибка загрузки: ${err.message}`, 'error');
+                showLoading(false);
+                document.getElementById('statusText').textContent = 'Ошибка подключения';
+            }
+        }
+
+        async function submitForm(e) {
+            e.preventDefault();
+            
+            if (isSubmitting) return;
+            
+            if (!validateForm()) {
+                showAlert('❌ Пожалуйста, исправьте ошибки в форме', 'error');
+                return;
+            }
+            
+            isSubmitting = true;
+            const btn = document.getElementById('submitBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '⏳ Сохранение...';
+            btn.disabled = true;
+            
+            try {
+                const data = [];
+                formFields.forEach(field => {
+                    const input = document.getElementById(field.id);
+                    if (input && input.value.trim()) {
+                        data.push({ 
+                            id: field.id, 
+                            value: input.value.trim(),
+                            label: field.label
+                        });
+                    }
+                });
+                
+                if (currentMode === 'test') {
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    showAlert('🧪 Тестовый режим: данные не отправлены, но форма очищена', 'success');
+                    formFields.forEach(field => {
+                        const input = document.getElementById(field.id);
+                        if (input) input.value = '';
+                    });
+                } else {
+                    const response = await fetch(SAVE_DATA_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({ 
+                            fields: data, 
+                            timestamp: new Date().toISOString(),
+                            userAgent: navigator.userAgent
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    
+                    const result = await response.json();
+                    
+                    if (result.success === false) {
+                        throw new Error(result.message || 'Ошибка сохранения');
+                    }
+                    
+                    showAlert('✅ Данные успешно сохранены в Google Sheets!', 'success');
+                    
+                    // Очищаем форму
+                    formFields.forEach(field => {
+                        const input = document.getElementById(field.id);
+                        if (input) input.value = '';
+                    });
+                }
+                
+            } catch (err) {
+                console.error('Submit error:', err);
+                showAlert(`❌ Ошибка сохранения: ${err.message}`, 'error');
+            } finally {
+                isSubmitting = false;
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', () => {
+            loadFields();
+            document.getElementById('form').addEventListener('submit', submitForm);
+        });
+    </script>
 </body>
 </html>
