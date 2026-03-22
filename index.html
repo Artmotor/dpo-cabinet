@@ -2,814 +2,293 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Динамическая форма | Google Sheets Integration</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Динамическая форма</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --success: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --gray-50: #f9fafb;
-            --gray-100: #f3f4f6;
-            --gray-200: #e5e7eb;
-            --gray-300: #d1d5db;
-            --gray-400: #9ca3af;
-            --gray-500: #6b7280;
-            --gray-600: #4b5563;
-            --gray-700: #374151;
-            --gray-800: #1f2937;
-            --gray-900: #111827;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
         }
-
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-        }
-
-        .form-card {
+        .container { max-width: 800px; margin: 0 auto; }
+        .card {
             background: white;
-            border-radius: 32px;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
             overflow: hidden;
         }
-
-        .form-header {
-            background: linear-gradient(135deg, var(--primary) 0%, #4f46e5 100%);
-            padding: 40px;
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
+            padding: 30px;
             text-align: center;
         }
-
-        .form-header h1 {
-            font-size: 32px;
-            margin-bottom: 12px;
-        }
-
-        .form-header p {
-            font-size: 16px;
-            opacity: 0.9;
-        }
-
-        .header-icon {
-            font-size: 48px;
-            margin-bottom: 16px;
-        }
-
-        .form-content {
-            padding: 40px;
-            background: white;
-        }
-
-        .info-box {
-            background: var(--gray-50);
-            border-left: 4px solid var(--primary);
-            padding: 16px 20px;
-            border-radius: 16px;
-            margin-bottom: 32px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 14px;
-            color: var(--gray-600);
-        }
-
-        .info-box.error {
-            border-left-color: var(--danger);
-            background: #fef2f2;
-        }
-
-        .info-box.success {
-            border-left-color: var(--success);
-            background: #f0fdf4;
-        }
-
-        .form-group {
-            margin-bottom: 28px;
-            animation: slideInUp 0.5s ease forwards;
-            opacity: 0;
-            transform: translateY(20px);
-        }
-
-        @keyframes slideInUp {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: var(--gray-700);
-            font-size: 14px;
-        }
-
-        .required-star {
-            color: var(--danger);
-            margin-left: 4px;
-        }
-
-        input, select, textarea {
+        .header h1 { font-size: 28px; margin-bottom: 8px; }
+        .content { padding: 30px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: #333; }
+        input, textarea {
             width: 100%;
-            padding: 12px 16px;
-            border: 2px solid var(--gray-200);
-            border-radius: 12px;
-            font-size: 15px;
-            transition: all 0.3s ease;
-            font-family: inherit;
-        }
-
-        input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-        }
-
-        input.error, select.error, textarea.error {
-            border-color: var(--danger);
-            background: #fef2f2;
-        }
-
-        .error-message {
-            color: var(--danger);
-            font-size: 12px;
-            margin-top: 6px;
-            display: none;
-        }
-
-        .error-message.show {
-            display: block;
-        }
-
-        .submit-btn {
-            width: 100%;
-            padding: 16px;
-            background: linear-gradient(135deg, var(--primary) 0%, #4f46e5 100%);
-            color: white;
-            border: none;
-            border-radius: 14px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 16px;
-        }
-
-        .submit-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.4);
-        }
-
-        .submit-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        .spinner {
-            width: 48px;
-            height: 48px;
-            border: 3px solid var(--gray-200);
-            border-top-color: var(--primary);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin: 0 auto;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .alert {
-            padding: 16px 20px;
-            border-radius: 16px;
-            margin-bottom: 24px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            animation: slideIn 0.3s ease;
-            font-size: 14px;
-        }
-
-        @keyframes slideIn {
-            from {
-                transform: translateY(-20px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-
-        .alert-success {
-            background: #d1fae5;
-            color: #065f46;
-            border-left: 4px solid var(--success);
-        }
-
-        .alert-error {
-            background: #fee2e2;
-            color: #991b1b;
-            border-left: 4px solid var(--danger);
-        }
-
-        .alert-close {
-            margin-left: auto;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        .debug-panel {
-            margin-top: 20px;
             padding: 12px;
-            background: var(--gray-100);
+            border: 2px solid #e0e0e0;
             border-radius: 8px;
-            font-family: monospace;
-            font-size: 11px;
-            display: none;
-        }
-
-        .debug-panel.show {
-            display: block;
-        }
-
-        .debug-panel pre {
-            overflow-x: auto;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-        }
-
-        .mode-switch {
-            margin-bottom: 20px;
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-        }
-
-        .mode-btn {
-            padding: 8px 16px;
-            border: 2px solid var(--gray-200);
-            background: white;
-            border-radius: 8px;
-            cursor: pointer;
             font-size: 14px;
             transition: all 0.3s;
         }
-
-        .mode-btn.active {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
         }
-
+        input.error { border-color: #f56565; background: #fff5f5; }
+        .error-message { color: #f56565; font-size: 12px; margin-top: 5px; display: none; }
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        button:hover { transform: translateY(-2px); }
+        button:disabled { opacity: 0.6; cursor: not-allowed; }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #f3f3f3;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .alert-success { background: #c6f6d5; color: #22543d; }
+        .alert-error { background: #fed7d7; color: #742a2a; }
+        .info-box {
+            background: #f7fafc;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #4a5568;
+            border-left: 4px solid #667eea;
+        }
+        .mode-switch {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .mode-btn {
+            flex: 1;
+            padding: 10px;
+            background: #f7fafc;
+            color: #4a5568;
+            border: 2px solid #e2e8f0;
+        }
+        .mode-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
         @media (max-width: 768px) {
-            .form-header {
-                padding: 30px 20px;
-            }
-            
-            .form-header h1 {
-                font-size: 24px;
-            }
-            
-            .form-content {
-                padding: 24px;
-            }
+            .header h1 { font-size: 24px; }
+            .content { padding: 20px; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="form-card">
-            <div class="form-header">
-                <div class="header-icon">📊</div>
-                <h1>Динамическая форма ввода</h1>
-                <p>Поля автоматически генерируются из Google Sheets</p>
+<div class="container">
+    <div class="card">
+        <div class="header">
+            <h1>📊 Динамическая форма</h1>
+            <p>Поля из Google Sheets</p>
+        </div>
+        <div class="content">
+            <div class="mode-switch">
+                <button class="mode-btn active" onclick="setMode('remote')">🌐 Удаленный</button>
+                <button class="mode-btn" onclick="setMode('test')">🧪 Тестовый</button>
             </div>
-            <div class="form-content">
-                <div class="mode-switch">
-                    <button class="mode-btn active" onclick="switchMode('remote')">🌐 Удаленный режим</button>
-                    <button class="mode-btn" onclick="switchMode('test')">🧪 Тестовый режим</button>
-                </div>
-                
-                <div id="alertContainer"></div>
-                
-                <div class="info-box" id="infoBox">
-                    <span class="info-icon">⚡</span>
-                    <span id="infoText">Загрузка полей формы...</span>
-                </div>
-                
-                <div id="loadingContainer" style="display: none;">
-                    <div style="text-align: center; padding: 40px;">
-                        <div class="spinner"></div>
-                        <p style="margin-top: 16px; color: var(--gray-500);">Загрузка данных...</p>
-                    </div>
-                </div>
-                
-                <form id="dynamicForm" style="display: none;">
-                    <div id="formFields"></div>
-                    <button type="submit" class="submit-btn" id="submitBtn">
-                        💾 Сохранить данные
-                    </button>
-                </form>
-
-                <div class="debug-panel" id="debugPanel">
-                    <strong>🔧 Debug Information:</strong>
-                    <pre id="debugContent"></pre>
-                </div>
-            </div>
+            <div id="alert"></div>
+            <div class="info-box" id="infoBox">⚡ Загрузка полей...</div>
+            <div id="loading"><div class="spinner"></div></div>
+            <form id="form" style="display: none;">
+                <div id="fields"></div>
+                <button type="submit" id="submitBtn">💾 Сохранить</button>
+            </form>
         </div>
     </div>
+</div>
 
-    <script>
-        // Конфигурация
-        const N8N_WEBHOOK_URL = 'https://4yzm-gv2z-j6ws.gw-1a.dockhost.net';
-        const GET_FIELDS_ENDPOINT = 'https://4yzm-gv2z-j6ws.gw-1a.dockhost.net/webhook-test/get-fields';
-        const SAVE_DATA_ENDPOINT = 'https://4yzm-gv2z-j6ws.gw-1a.dockhost.net/webhook-test/save-data';
-        
-        // Тестовые данные
-        const TEST_FIELDS = [
-            { id: "email", label: "Email", type: "email", required: true, placeholder: "example@mail.com" },
-            { id: "name", label: "Имя", type: "text", required: true, placeholder: "Введите ваше имя" },
-            { id: "phone", label: "Телефон", type: "tel", required: true, placeholder: "+7 (999) 123-45-67" },
-            { id: "message", label: "Сообщение", type: "textarea", required: false, placeholder: "Ваше сообщение" }
-        ];
-        
-        let formFields = [];
-        let isSubmitting = false;
-        let currentMode = 'remote'; // 'remote' or 'test'
-        
-        // Debug функция
-        function addDebug(message, data = null) {
-            const debugPanel = document.getElementById('debugPanel');
-            const debugContent = document.getElementById('debugContent');
-            const timestamp = new Date().toLocaleTimeString();
-            
-            let currentContent = debugContent.textContent || '';
-            currentContent += `[${timestamp}] ${message}\n`;
-            if (data) {
-                currentContent += JSON.stringify(data, null, 2) + '\n';
-            }
-            currentContent += '─'.repeat(50) + '\n';
-            
-            // Ограничиваем размер лога
-            const lines = currentContent.split('\n');
-            if (lines.length > 100) {
-                currentContent = lines.slice(-100).join('\n');
-            }
-            
-            debugContent.textContent = currentContent;
-            debugPanel.classList.add('show');
-            
-            console.log(`[${timestamp}]`, message, data);
-        }
-        
-        function switchMode(mode) {
-            currentMode = mode;
-            addDebug(`Переключение в ${mode} режим`);
-            
-            // Обновляем активную кнопку
-            document.querySelectorAll('.mode-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event.target.classList.add('active');
-            
-            // Перезагружаем форму
-            loadFields();
-        }
-        
-        function showAlert(message, type = 'success', duration = 5000) {
-            const alertContainer = document.getElementById('alertContainer');
-            const alertId = 'alert_' + Date.now();
-            
-            const icons = {
-                success: '✅',
-                error: '❌',
-                warning: '⚠️'
-            };
-            
-            const alertHtml = `
-                <div id="${alertId}" class="alert alert-${type}">
-                    <span>${icons[type] || 'ℹ️'}</span>
-                    <span>${message}</span>
-                    <span class="alert-close" onclick="closeAlert('${alertId}')">✕</span>
-                </div>
-            `;
-            
-            alertContainer.insertAdjacentHTML('beforeend', alertHtml);
-            
-            if (duration > 0) {
-                setTimeout(() => closeAlert(alertId), duration);
-            }
-        }
-        
-        function closeAlert(alertId) {
-            const alert = document.getElementById(alertId);
-            if (alert) alert.remove();
-        }
-        
-        function showLoading(show) {
-            const loadingContainer = document.getElementById('loadingContainer');
-            const form = document.getElementById('dynamicForm');
-            const infoBox = document.getElementById('infoBox');
-            
-            if (show) {
-                loadingContainer.style.display = 'block';
-                form.style.display = 'none';
-                infoBox.style.display = 'none';
-            } else {
-                loadingContainer.style.display = 'none';
-                form.style.display = 'block';
-                infoBox.style.display = 'flex';
-            }
-        }
-        
-        function validateField(fieldId) {
-            const input = document.getElementById(fieldId);
-            const errorDiv = document.getElementById(`${fieldId}-error`);
-            const field = formFields.find(f => f.id === fieldId);
-            
-            if (!input || !errorDiv || !field) return true;
-            
-            let isValid = true;
-            let errorMessage = '';
-            const value = input.value.trim();
-            
-            if (field.required && !value) {
-                isValid = false;
-                errorMessage = 'Это поле обязательно для заполнения';
-            } else if (field.type === 'email' && value) {
-                const emailRegex = /^[^\s@]+@([^\s@]+\.)+[^\s@]+$/;
-                if (!emailRegex.test(value)) {
-                    isValid = false;
-                    errorMessage = 'Введите корректный email адрес';
-                }
-            } else if (field.type === 'tel' && value) {
-                const phoneRegex = /^[\d\s+()-]{10,}$/;
-                if (!phoneRegex.test(value)) {
-                    isValid = false;
-                    errorMessage = 'Введите корректный номер телефона (мин. 10 цифр)';
-                }
-            }
-            
-            if (!isValid) {
-                input.classList.add('error');
-                errorDiv.textContent = errorMessage;
-                errorDiv.classList.add('show');
-            } else {
-                input.classList.remove('error');
-                errorDiv.classList.remove('show');
-            }
-            
-            return isValid;
-        }
-        
-        function validateForm() {
-            let isValid = true;
-            formFields.forEach(field => {
-                if (!validateField(field.id)) isValid = false;
-            });
-            return isValid;
-        }
-        
-        function renderForm(fields) {
-            const formFieldsContainer = document.getElementById('formFields');
-            formFieldsContainer.innerHTML = '';
-            
-            fields.forEach((field, index) => {
-                const formGroup = document.createElement('div');
-                formGroup.className = 'form-group';
-                formGroup.style.animationDelay = `${index * 0.05}s`;
-                
-                const label = document.createElement('label');
-                label.htmlFor = field.id;
-                label.textContent = field.label;
-                if (field.required) {
-                    const star = document.createElement('span');
-                    star.className = 'required-star';
-                    star.textContent = ' *';
-                    label.appendChild(star);
-                }
-                
-                let input;
-                if (field.type === 'textarea') {
-                    input = document.createElement('textarea');
-                    input.rows = 4;
-                } else {
-                    input = document.createElement('input');
-                    input.type = field.type || 'text';
-                }
-                
-                input.id = field.id;
-                input.name = field.id;
-                input.required = field.required;
-                input.placeholder = field.placeholder || `Введите ${field.label.toLowerCase()}`;
-                
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'error-message';
-                errorDiv.id = `${field.id}-error`;
-                
-                formGroup.appendChild(label);
-                formGroup.appendChild(input);
-                formGroup.appendChild(errorDiv);
-                formFieldsContainer.appendChild(formGroup);
-                
-                input.addEventListener('input', () => validateField(field.id));
-                input.addEventListener('blur', () => validateField(field.id));
-            });
-        }
-        
-        async function loadFieldsRemote() {
-            addDebug('Загрузка полей из удаленного источника', { url: GET_FIELDS_ENDPOINT });
-            
-            try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 10000);
-                
-                const response = await fetch(GET_FIELDS_ENDPOINT, {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json'
-                    },
-                    signal: controller.signal
-                });
-                
-                clearTimeout(timeoutId);
-                
-                addDebug('Получен ответ', {
-                    status: response.status,
-                    statusText: response.statusText,
-                    contentType: response.headers.get('content-type')
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                
-                // Получаем текст ответа
-                const text = await response.text();
-                addDebug('Получен текст ответа', { 
-                    length: text.length,
-                    preview: text.substring(0, 500)
-                });
-                
-                if (!text || text.trim() === '') {
-                    throw new Error('Сервер вернул пустой ответ');
-                }
-                
-                // Парсим JSON
-                let data;
-                try {
-                    data = JSON.parse(text);
-                } catch (e) {
-                    addDebug('Ошибка парсинга JSON', { 
-                        error: e.message,
-                        text: text.substring(0, 200)
-                    });
-                    throw new Error(`Невалидный JSON: ${e.message}`);
-                }
-                
-                addDebug('Успешно распарсены данные', data);
-                
-                // Извлекаем поля
-                if (data.fields && Array.isArray(data.fields)) {
-                    formFields = data.fields;
-                } else if (Array.isArray(data)) {
-                    formFields = data;
-                } else {
-                    throw new Error('Неверный формат данных: ожидается массив полей');
-                }
-                
-                if (formFields.length === 0) {
-                    throw new Error('Нет полей для отображения');
-                }
-                
-                return true;
-                
-            } catch (error) {
-                addDebug('Ошибка загрузки', { 
-                    message: error.message,
-                    stack: error.stack
-                });
-                throw error;
-            }
-        }
-        
-        function loadFieldsTest() {
-            addDebug('Загрузка тестовых полей', TEST_FIELDS);
+<script>
+// ========== PRODUCTION URL ==========
+// ЗАМЕНИТЕ НА ВАШИ PRODUCTION URL ПОСЛЕ АКТИВАЦИИ WEBHOOK
+const PRODUCTION_URL = 'https://4yzm-gv2z-j6ws.gw-1a.dockhost.net';
+const GET_FIELDS_URL = `${PRODUCTION_URL}/webhook/get-fields`;
+const SAVE_DATA_URL = `${PRODUCTION_URL}/webhook/save-data`;
+
+// Тестовые данные
+const TEST_FIELDS = [
+    { id: "email", label: "Email", type: "email", required: true, placeholder: "example@mail.com" },
+    { id: "name", label: "Имя", type: "text", required: true, placeholder: "Ваше имя" },
+    { id: "phone", label: "Телефон", type: "tel", required: true, placeholder: "+7 (999) 123-45-67" }
+];
+
+let currentMode = 'remote';
+let formFields = [];
+let isSubmitting = false;
+
+function setMode(mode) {
+    currentMode = mode;
+    document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+    loadFields();
+}
+
+function showAlert(msg, type) {
+    const alertDiv = document.getElementById('alert');
+    alertDiv.className = `alert alert-${type}`;
+    alertDiv.innerHTML = `<span>${type === 'success' ? '✅' : '❌'}</span><span>${msg}</span>`;
+    alertDiv.style.display = 'flex';
+    setTimeout(() => alertDiv.style.display = 'none', 5000);
+}
+
+function showLoading(show) {
+    document.getElementById('loading').style.display = show ? 'block' : 'none';
+    document.getElementById('form').style.display = show ? 'none' : 'block';
+    document.getElementById('infoBox').style.display = show ? 'none' : 'flex';
+}
+
+function renderForm(fields) {
+    const container = document.getElementById('fields');
+    container.innerHTML = '';
+    fields.forEach((field, i) => {
+        const div = document.createElement('div');
+        div.className = 'form-group';
+        div.style.animation = `slideInUp 0.3s ease ${i * 0.05}s forwards`;
+        div.innerHTML = `
+            <label>${field.label}${field.required ? '<span style="color:#f56565"> *</span>' : ''}</label>
+            <input type="${field.type}" id="${field.id}" placeholder="${field.placeholder}" ${field.required ? 'required' : ''}>
+            <div class="error-message" id="${field.id}-error"></div>
+        `;
+        container.appendChild(div);
+        const input = document.getElementById(field.id);
+        input.addEventListener('input', () => validateField(field.id));
+        input.addEventListener('blur', () => validateField(field.id));
+    });
+}
+
+function validateField(fieldId) {
+    const input = document.getElementById(fieldId);
+    const errorDiv = document.getElementById(`${fieldId}-error`);
+    const field = formFields.find(f => f.id === fieldId);
+    if (!input || !field) return true;
+    const value = input.value.trim();
+    let isValid = true;
+    let msg = '';
+    if (field.required && !value) { isValid = false; msg = 'Обязательное поле'; }
+    else if (field.type === 'email' && value && !/^[^\s@]+@([^\s@]+\.)+[^\s@]+$/.test(value)) { isValid = false; msg = 'Неверный email'; }
+    else if (field.type === 'tel' && value && !/^[\d\s+()-]{10,}$/.test(value)) { isValid = false; msg = 'Неверный телефон'; }
+    if (!isValid) { input.classList.add('error'); errorDiv.textContent = msg; errorDiv.style.display = 'block'; }
+    else { input.classList.remove('error'); errorDiv.style.display = 'none'; }
+    return isValid;
+}
+
+function validateForm() {
+    let valid = true;
+    formFields.forEach(f => { if (!validateField(f.id)) valid = false; });
+    return valid;
+}
+
+async function loadFieldsRemote() {
+    const response = await fetch(GET_FIELDS_URL, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' }
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const text = await response.text();
+    if (!text) throw new Error('Пустой ответ');
+    const data = JSON.parse(text);
+    return data.fields || data;
+}
+
+async function loadFields() {
+    showLoading(true);
+    try {
+        if (currentMode === 'remote') {
+            formFields = await loadFieldsRemote();
+        } else {
             formFields = TEST_FIELDS;
-            return Promise.resolve(true);
         }
-        
-        async function loadFields() {
-            showLoading(true);
-            
-            try {
-                let success;
-                if (currentMode === 'remote') {
-                    success = await loadFieldsRemote();
-                } else {
-                    success = await loadFieldsTest();
-                }
-                
-                if (success !== false) {
-                    renderForm(formFields);
-                    
-                    const infoBox = document.getElementById('infoBox');
-                    const infoText = document.getElementById('infoText');
-                    infoText.innerHTML = `📋 Найдено ${formFields.length} полей для заполнения`;
-                    infoBox.classList.remove('error');
-                    infoBox.classList.add('success');
-                    
-                    showLoading(false);
-                    showAlert(`✅ Форма успешно загружена! (${currentMode === 'remote' ? 'Удаленный режим' : 'Тестовый режим'})`, 'success', 3000);
-                    
-                    addDebug('Форма успешно отрендерена', { fieldsCount: formFields.length });
-                }
-                
-            } catch (error) {
-                console.error('Load error:', error);
-                addDebug('Критическая ошибка', { message: error.message });
-                
-                let errorMessage = '';
-                if (currentMode === 'remote') {
-                    if (error.message.includes('Failed to fetch')) {
-                        errorMessage = '❌ Не удается подключиться к серверу. Проверьте: 1) n8n запущен 2) Webhook активен 3) CORS настроен. Попробуйте тестовый режим.';
-                    } else if (error.message.includes('JSON')) {
-                        errorMessage = '❌ Сервер вернул некорректный ответ. Проверьте webhook URL и формат ответа. Попробуйте тестовый режим.';
-                    } else {
-                        errorMessage = `❌ Ошибка: ${error.message}. Попробуйте тестовый режим.`;
-                    }
-                } else {
-                    errorMessage = '❌ Ошибка в тестовом режиме. Перезагрузите страницу.';
-                }
-                
-                showAlert(errorMessage, 'error', 10000);
-                
-                const infoBox = document.getElementById('infoBox');
-                const infoText = document.getElementById('infoText');
-                infoText.innerHTML = errorMessage;
-                infoBox.classList.add('error');
-                infoBox.classList.remove('success');
-                
-                showLoading(false);
-            }
-        }
-        
-        async function submitForm(event) {
-            event.preventDefault();
-            
-            if (isSubmitting) {
-                showAlert('Данные уже отправляются', 'warning', 2000);
-                return;
-            }
-            
-            if (!validateForm()) {
-                showAlert('Пожалуйста, исправьте ошибки в форме', 'error', 4000);
-                const firstError = document.querySelector('.error');
-                if (firstError) firstError.focus();
-                return;
-            }
-            
-            isSubmitting = true;
-            const submitBtn = document.getElementById('submitBtn');
-            const originalText = submitBtn.innerHTML;
-            submitBtn.innerHTML = '⏳ Сохранение...';
-            submitBtn.disabled = true;
-            
-            addDebug('Отправка данных', { mode: currentMode });
-            
-            try {
-                const formData = [];
-                formFields.forEach(field => {
-                    const input = document.getElementById(field.id);
-                    if (input) {
-                        formData.push({
-                            id: field.id,
-                            value: input.value.trim()
-                        });
-                    }
-                });
-                
-                if (currentMode === 'test') {
-                    // Тестовый режим - просто показываем данные
-                    addDebug('Тестовый режим: данные не отправляются', formData);
-                    showAlert('✅ Тестовый режим: данные не отправлены на сервер. Для отправки переключитесь в удаленный режим.', 'success', 5000);
-                    
-                    // Очищаем форму
-                    formFields.forEach(field => {
-                        const input = document.getElementById(field.id);
-                        if (input) input.value = '';
-                    });
-                } else {
-                    // Удаленный режим - отправляем данные
-                    const payload = {
-                        fields: formData,
-                        timestamp: new Date().toISOString()
-                    };
-                    
-                    addDebug('Отправка данных на сервер', payload);
-                    
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 30000);
-                    
-                    const response = await fetch(SAVE_DATA_ENDPOINT, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json'
-                        },
-                        body: JSON.stringify(payload),
-                        signal: controller.signal
-                    });
-                    
-                    clearTimeout(timeoutId);
-                    
-                    addDebug('Ответ сервера', {
-                        status: response.status,
-                        statusText: response.statusText
-                    });
-                    
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                    }
-                    
-                    const text = await response.text();
-                    addDebug('Текст ответа', { length: text.length, preview: text.substring(0, 200) });
-                    
-                    let result;
-                    if (text && text.trim()) {
-                        try {
-                            result = JSON.parse(text);
-                        } catch (e) {
-                            addDebug('Ошибка парсинга ответа', { error: e.message });
-                            result = { success: true };
-                        }
-                    } else {
-                        result = { success: true };
-                    }
-                    
-                    addDebug('Результат', result);
-                    
-                    if (result.success !== false) {
-                        showAlert('✅ Данные успешно сохранены в Google Sheets!', 'success', 5000);
-                        
-                        formFields.forEach(field => {
-                            const input = document.getElementById(field.id);
-                            if (input) input.value = '';
-                        });
-                        
-                        submitBtn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
-                        setTimeout(() => {
-                            submitBtn.style.background = '';
-                        }, 1000);
-                    } else {
-                        throw new Error(result.message || 'Ошибка сохранения');
-                    }
-                }
-                
-            } catch (error) {
-                console.error('Save error:', error);
-                addDebug('Ошибка сохранения', { message: error.message });
-                showAlert(`❌ Ошибка сохранения: ${error.message}`, 'error', 7000);
-                
-            } finally {
-                isSubmitting = false;
-                submitBtn.innerHTML = originalText;
-                submitBtn.disabled = false;
-            }
-        }
-        
-        // Инициализация
-        document.addEventListener('DOMContentLoaded', () => {
-            addDebug('Приложение запущено', {
-                url: window.location.href,
-                userAgent: navigator.userAgent,
-                remoteUrl: GET_FIELDS_ENDPOINT
-            });
-            
-            loadFields();
-            document.getElementById('dynamicForm').addEventListener('submit', submitForm);
+        if (!formFields || formFields.length === 0) throw new Error('Нет полей');
+        renderForm(formFields);
+        document.getElementById('infoBox').innerHTML = `📋 Найдено ${formFields.length} полей`;
+        showLoading(false);
+        showAlert(`Форма загружена (${currentMode === 'remote' ? 'удаленный' : 'тестовый'} режим)`, 'success');
+    } catch (err) {
+        console.error(err);
+        document.getElementById('infoBox').innerHTML = '❌ Ошибка загрузки. Проверьте URL и CORS';
+        showLoading(false);
+        showAlert(`Ошибка: ${err.message}`, 'error');
+    }
+}
+
+async function submitForm(e) {
+    e.preventDefault();
+    if (isSubmitting) return;
+    if (!validateForm()) { showAlert('Исправьте ошибки', 'error'); return; }
+    isSubmitting = true;
+    const btn = document.getElementById('submitBtn');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '⏳ Сохранение...';
+    btn.disabled = true;
+    try {
+        const data = [];
+        formFields.forEach(f => {
+            const input = document.getElementById(f.id);
+            if (input) data.push({ id: f.id, value: input.value.trim() });
         });
-        
-        // Делаем функции глобальными для доступа из onclick
-        window.switchMode = switchMode;
-        window.closeAlert = closeAlert;
-    </script>
+        if (currentMode === 'test') {
+            showAlert('Тестовый режим: данные не отправлены', 'success');
+            formFields.forEach(f => { const inp = document.getElementById(f.id); if (inp) inp.value = ''; });
+        } else {
+            const response = await fetch(SAVE_DATA_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fields: data, timestamp: new Date().toISOString() })
+            });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const result = await response.json();
+            if (result.success !== false) {
+                showAlert('✅ Данные сохранены!', 'success');
+                formFields.forEach(f => { const inp = document.getElementById(f.id); if (inp) inp.value = ''; });
+            } else throw new Error(result.message || 'Ошибка');
+        }
+    } catch (err) {
+        showAlert(`Ошибка: ${err.message}`, 'error');
+    } finally {
+        isSubmitting = false;
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadFields();
+    document.getElementById('form').addEventListener('submit', submitForm);
+});
+</script>
 </body>
 </html>
