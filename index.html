@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Динамическая форма - Google Sheets</title>
+    <link rel="icon" href="data:,"> <!-- Убираем запрос favicon -->
     <style>
         * {
             margin: 0;
@@ -109,6 +110,7 @@
             border-radius: 12px;
             margin-bottom: 20px;
             border-left: 4px solid #667eea;
+            font-size: 14px;
         }
 
         .alert {
@@ -232,6 +234,16 @@
             margin-left: 8px;
             vertical-align: middle;
         }
+
+        .debug-info {
+            font-family: monospace;
+            font-size: 11px;
+            margin-top: 10px;
+            padding: 8px;
+            background: #f1f5f9;
+            border-radius: 6px;
+            word-break: break-all;
+        }
     </style>
 </head>
 <body>
@@ -276,6 +288,7 @@
                 <div class="status" id="status">
                     Статус: ожидание настройки
                 </div>
+                <div id="debugInfo" class="debug-info" style="display: none;"></div>
             </div>
         </div>
     </div>
@@ -285,24 +298,6 @@
         let formFields = [];
         let isSubmitting = false;
 
-        // Функция для тестирования CORS
-        async function testCors(url) {
-            try {
-                const response = await fetch(url, {
-                    method: 'OPTIONS',
-                    mode: 'cors',
-                    headers: {
-                        'Origin': window.location.origin,
-                        'Access-Control-Request-Method': 'GET',
-                        'Access-Control-Request-Headers': 'Content-Type'
-                    }
-                });
-                return response.ok;
-            } catch (e) {
-                return false;
-            }
-        }
-
         function getServerUrl() {
             let url = document.getElementById('serverUrl').value.trim();
             if (!url) {
@@ -311,7 +306,6 @@
             }
             url = url.replace(/\/$/, '');
             
-            // Проверяем, что URL начинается с http:// или https://
             if (!url.startsWith('http://') && !url.startsWith('https://')) {
                 url = 'https://' + url;
             }
@@ -469,11 +463,12 @@
             const urls = getUrls();
             if (!urls) throw new Error('URL не указан');
             
-            // Пробуем выполнить запрос с таймаутом
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 10000);
+            const timeoutId = setTimeout(() => controller.abort(), 15000);
             
             try {
+                console.log('Fetching from:', urls.getFields);
+                
                 const response = await fetch(urls.getFields, {
                     method: 'GET',
                     headers: {
@@ -486,45 +481,80 @@
                 
                 clearTimeout(timeoutId);
                 
+                console.log('Response status:', response.status);
+                console.log('Response headers:', [...response.headers.entries()]);
+                
                 if (!response.ok) {
                     if (response.status === 404) {
-                        throw new Error('Webhook не найден (404). Проверьте URL и активирован ли webhook в n8n');
+                        throw new Error('Webhook не найден (404). Проверьте:\n• Правильность пути /webhook/get-fields\n• Активирован ли webhook в n8n\n• URL сервера');
                     }
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
                 
-                const data = await response.json();
+                // Получаем текст ответа
+                const responseText = await response.text();
+                console.log('Response text:', responseText);
                 
-                // Поддерживаем разные форматы ответа
+                // Проверяем, не пустой ли ответ
+                if (!responseText || responseText.trim() === '') {
+                    throw new Error('Сервер вернул пустой ответ. Проверьте настройки webhook в n8n');
+                }
+                
+                // Парсим JSON
+                let data;
+                try {
+                    data = JSON.parse(responseText);
+                } catch (e) {
+                    console.error('JSON parse error:', e);
+                    throw new Error(`Сервер вернул некорректный JSON: ${responseText.substring(0, 200)}`);
+                }
+                
+                // Преобразуем данные в формат полей
+                let fields = [];
+                
                 if (Array.isArray(data)) {
-                    return data.map(item => ({
+                    fields = data.map(item => ({
                         id: item.id || item.name || item.field,
-                        label: item.label || item.name || item.id,
+                        label: item.label || item.name || item.id || 'Поле',
                         type: item.type || 'text',
                         required: item.required || false,
                         placeholder: item.placeholder || ''
                     }));
                 } else if (data.fields && Array.isArray(data.fields)) {
-                    return data.fields;
+                    fields = data.fields;
                 } else if (data.data && Array.isArray(data.data)) {
-                    return data.data;
-                } else {
-                    // Если получили объект с данными из таблицы
-                    const firstRow = data[Object.keys(data)[0]];
-                    if (firstRow && typeof firstRow === 'object') {
-                        return Object.keys(firstRow).map(key => ({
+                    fields = data.data;
+                } else if (typeof data === 'object' && data !== null) {
+                    // Если пришел объект с данными, берем ключи как поля
+                    const keys = Object.keys(data);
+                    if (keys.length > 0 && typeof data[keys[0]] !== 'object') {
+                        fields = keys.map(key => ({
                             id: key,
                             label: key.charAt(0).toUpperCase() + key.slice(1),
+                            type: 'text',
+                            required: false,
+                            placeholder: `Введите ${key}`
+                        }));
+                    } else {
+                        fields = keys.map(key => ({
+                            id: key,
+                            label: key,
                             type: 'text',
                             required: false
                         }));
                     }
-                    throw new Error('Неверный формат ответа от сервера');
                 }
+                
+                if (!fields || fields.length === 0) {
+                    throw new Error('Нет полей для отображения. Убедитесь, что в Google Sheets есть данные');
+                }
+                
+                return fields;
+                
             } catch (err) {
                 clearTimeout(timeoutId);
                 if (err.name === 'AbortError') {
-                    throw new Error('Превышен таймаут (10 сек). Проверьте доступность сервера');
+                    throw new Error('Превышен таймаут (15 сек). Проверьте доступность сервера и настройки CORS');
                 }
                 throw err;
             }
@@ -557,6 +587,7 @@
             
             showLoading(true);
             document.getElementById('infoBox').innerHTML = '🔄 Загрузка полей из Google Sheets...';
+            document.getElementById('debugInfo').style.display = 'none';
             
             try {
                 formFields = await loadRemoteFields();
@@ -574,14 +605,26 @@
             } catch (err) {
                 console.error('Load error:', err);
                 let errorMsg = err.message;
+                
                 if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
-                    errorMsg = 'Не удалось подключиться к серверу. Проверьте:\n• Правильность URL\n• Активен ли webhook в n8n (Webhook GET должен быть активирован)\n• Настроены ли CORS заголовки в n8n\n• Доступен ли сервер из интернета';
+                    errorMsg = '❌ Не удалось подключиться к серверу.\n\nПроверьте:\n• Правильность URL (должен начинаться с http:// или https://)\n• Доступен ли сервер из браузера (откройте URL в новой вкладке)\n• Активен ли webhook в n8n (должен быть зеленый индикатор)\n• Настроены ли CORS заголовки в n8n';
+                } else if (err.message.includes('пустой ответ')) {
+                    errorMsg = '❌ ' + err.message + '\n\nВ n8n webhook должен возвращать JSON. Проверьте код в узле "Format Fields"';
+                } else if (err.message.includes('некорректный JSON')) {
+                    errorMsg = '❌ ' + err.message;
                 } else if (err.message.includes('404')) {
-                    errorMsg = 'Webhook не найден. Убедитесь, что в n8n:\n• Webhook GET активирован (кнопка "Active")\n• Путь webhook: /webhook/get-fields\n• Webhook имеет статус "Waiting for connection"';
+                    errorMsg = '❌ ' + err.message + '\n\nУбедитесь, что путь webhook: /webhook/get-fields';
                 }
-                document.getElementById('infoBox').innerHTML = `❌ Ошибка: ${errorMsg}`;
+                
+                document.getElementById('infoBox').innerHTML = errorMsg.replace(/\n/g, '<br>');
                 document.getElementById('status').innerHTML = `❌ Ошибка: ${err.message}`;
-                showAlert(`❌ Ошибка загрузки: ${errorMsg}`, 'error');
+                
+                // Показываем отладочную информацию
+                const debugDiv = document.getElementById('debugInfo');
+                debugDiv.innerHTML = `🔍 Отладка:<br>URL: ${serverUrl}<br>Полный адрес: ${serverUrl}/webhook/get-fields<br>Ошибка: ${err.message}<br>Время: ${new Date().toLocaleString()}`;
+                debugDiv.style.display = 'block';
+                
+                showAlert(`❌ Ошибка загрузки: ${err.message.split('\n')[0]}`, 'error');
                 document.getElementById('form').style.display = 'none';
             } finally {
                 showLoading(false);
@@ -627,24 +670,30 @@
                         'Content-Type': 'application/json',
                         'Accept': 'application/json'
                     },
-                    body: JSON.stringify({ 
-                        ...formData,
-                        timestamp: new Date().toISOString()
-                    })
+                    body: JSON.stringify(formData)
                 });
                 
                 if (!response.ok) {
                     let errorMsg = `HTTP ${response.status}`;
                     try {
-                        const errorData = await response.json();
-                        errorMsg = errorData.message || errorMsg;
+                        const errorText = await response.text();
+                        if (errorText) {
+                            const errorData = JSON.parse(errorText);
+                            errorMsg = errorData.message || errorData.error || errorText;
+                        }
                     } catch (e) {
                         errorMsg = await response.text() || errorMsg;
                     }
                     throw new Error(errorMsg);
                 }
                 
-                const result = await response.json();
+                const responseText = await response.text();
+                let result;
+                try {
+                    result = responseText ? JSON.parse(responseText) : { success: true };
+                } catch (e) {
+                    result = { success: true, message: 'Data saved' };
+                }
                 
                 if (result.success === false) {
                     throw new Error(result.message || 'Ошибка сохранения');
@@ -662,7 +711,7 @@
                 console.error('Submit error:', err);
                 let errorMsg = err.message;
                 if (err.message.includes('Failed to fetch')) {
-                    errorMsg = 'Не удалось отправить данные. Проверьте CORS настройки в n8n';
+                    errorMsg = 'Не удалось отправить данные. Проверьте CORS настройки в n8n и доступность сервера';
                 }
                 showAlert(`❌ Ошибка сохранения: ${errorMsg}`, 'error');
             } finally {
@@ -676,13 +725,11 @@
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('form').addEventListener('submit', submitForm);
             
-            // Попытка загрузить сохраненный URL из localStorage
             const savedUrl = localStorage.getItem('n8n_server_url');
             if (savedUrl) {
                 document.getElementById('serverUrl').value = savedUrl;
             }
             
-            // Сохраняем URL при изменении
             document.getElementById('serverUrl').addEventListener('change', () => {
                 localStorage.setItem('n8n_server_url', document.getElementById('serverUrl').value);
             });
