@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Динамическая форма - Google Sheets</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+    <title>Google Sheets Viewer - Просмотр таблицы</title>
     <style>
         * {
             margin: 0;
@@ -13,241 +12,163 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
         }
 
         .container {
-            max-width: 900px;
+            max-width: 1400px;
             margin: 0 auto;
         }
 
-        .card {
-            background: white;
-            border-radius: 24px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            overflow: hidden;
-        }
-
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: white;
+            border-radius: 20px;
             padding: 30px;
-            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
         }
 
-        .header h1 {
-            font-size: 28px;
+        h1 {
+            color: #333;
+            font-size: 2em;
             margin-bottom: 10px;
         }
 
-        .header p {
-            opacity: 0.9;
-        }
-
-        .badge {
-            display: inline-block;
-            background: rgba(255,255,255,0.2);
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            margin-top: 10px;
-        }
-
-        .content {
-            padding: 30px;
-        }
-
-        .config-section {
-            background: #f7fafc;
-            padding: 20px;
-            border-radius: 12px;
+        .subtitle {
+            color: #666;
             margin-bottom: 20px;
-            border: 1px solid #e2e8f0;
         }
 
-        .config-section label {
+        .config-panel {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label {
             display: block;
             margin-bottom: 8px;
             font-weight: 600;
-            color: #2d3748;
+            color: #555;
         }
 
-        .config-section input {
+        input, select {
             width: 100%;
             padding: 12px;
-            border: 2px solid #e2e8f0;
+            border: 2px solid #e0e0e0;
             border-radius: 8px;
             font-size: 14px;
-            font-family: monospace;
+            transition: all 0.3s;
         }
 
-        .config-section input:focus {
+        input:focus, select:focus {
             outline: none;
             border-color: #667eea;
         }
 
-        .info-hint {
-            font-size: 12px;
-            color: #718096;
-            margin-top: 8px;
-        }
-
-        .mode-switch {
-            display: flex;
-            gap: 10px;
-            margin: 20px 0;
-        }
-
-        .mode-btn {
-            flex: 1;
-            padding: 12px;
-            background: #f7fafc;
-            border: 2px solid #e2e8f0;
-            cursor: pointer;
-            border-radius: 10px;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-
-        .mode-btn.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-color: #667eea;
-        }
-
-        .btn-primary {
-            width: 100%;
-            padding: 12px;
+        button {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            border-radius: 10px;
+            padding: 12px 30px;
+            border-radius: 8px;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            margin-bottom: 10px;
-            transition: transform 0.2s;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
 
-        .btn-primary:hover:not(:disabled) {
+        button:hover {
             transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
         }
 
-        .btn-secondary {
-            width: 100%;
+        button:active {
+            transform: translateY(0);
+        }
+
+        .status {
+            margin-top: 15px;
             padding: 12px;
-            background: #48bb78;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-bottom: 10px;
-            transition: transform 0.2s;
-        }
-
-        .btn-secondary:hover:not(:disabled) {
-            transform: translateY(-2px);
-            background: #38a169;
-        }
-
-        button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .alert {
-            padding: 12px;
-            border-radius: 10px;
-            margin-bottom: 20px;
+            border-radius: 8px;
             display: none;
         }
 
-        .alert-success {
-            background: #c6f6d5;
-            color: #22543d;
-            border-left: 4px solid #48bb78;
-        }
-
-        .alert-error {
-            background: #fed7d7;
-            color: #742a2a;
-            border-left: 4px solid #f56565;
-        }
-
-        .alert-info {
-            background: #bee3f8;
-            color: #2c5282;
-            border-left: 4px solid #4299e1;
-        }
-
-        .info-box {
-            background: #eef2ff;
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            border-left: 4px solid #667eea;
-            font-size: 14px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
             display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #2d3748;
         }
 
-        .form-group label .required {
-            color: #f56565;
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
         }
 
-        .form-group input,
-        .form-group textarea {
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+
+        table {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
+            border-collapse: collapse;
             font-size: 14px;
-            transition: all 0.3s;
-            font-family: inherit;
         }
 
-        .form-group input:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
         }
 
-        .form-group input.error {
-            border-color: #f56565;
-            background: #fff5f5;
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #555;
+            position: sticky;
+            top: 0;
         }
 
-        .error-message {
-            color: #f56565;
-            font-size: 12px;
-            margin-top: 5px;
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
             display: none;
         }
 
         .spinner {
-            width: 40px;
-            height: 40px;
             border: 3px solid #f3f3f3;
             border-top: 3px solid #667eea;
             border-radius: 50%;
+            width: 40px;
+            height: 40px;
             animation: spin 1s linear infinite;
-            margin: 20px auto;
+            margin: 0 auto 20px;
         }
 
         @keyframes spin {
@@ -255,530 +176,317 @@
             100% { transform: rotate(360deg); }
         }
 
-        .status {
+        .stats {
             margin-top: 20px;
-            padding: 12px;
-            background: #f7fafc;
-            border-radius: 10px;
-            font-size: 12px;
-            text-align: center;
-            color: #718096;
-        }
-
-        .debug-panel {
-            margin-top: 15px;
-            padding: 12px;
-            background: #2d3748;
-            color: #a0aec0;
+            padding: 15px;
+            background: #f8f9fa;
             border-radius: 8px;
-            font-family: monospace;
-            font-size: 11px;
+            color: #666;
+        }
+
+        .proxy-warning {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            color: #856404;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
             display: none;
-            overflow-x: auto;
         }
 
-        .debug-panel.show {
-            display: block;
-        }
-
-        .debug-toggle {
-            font-size: 11px;
-            color: #667eea;
-            cursor: pointer;
-            text-align: right;
-            margin-top: 8px;
+        @media (max-width: 768px) {
+            .header {
+                padding: 20px;
+            }
+            
+            th, td {
+                padding: 8px;
+                font-size: 12px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="card">
-            <div class="header">
-                <h1>📊 Динамическая форма</h1>
-                <p>Интеграция с Google Sheets</p>
-                <div class="badge">✨ Первая строка — заголовки | Вторая строка — поля формы ✨</div>
-            </div>
-            <div class="content">
-                <div class="config-section">
-                    <label>🔗 URL сервера n8n:</label>
-                    <input type="text" id="serverUrl" placeholder="https://ваш-сервер.n8n.io" value="">
-                    <div class="info-hint">
-                        💡 Вставьте production URL из n8n (например: https://xxxxx.gw.dockhost.net)
-                    </div>
-                </div>
-
-                <div class="mode-switch">
-                    <button class="mode-btn active" onclick="setMode('remote')">🌐 Удаленный режим</button>
-                    <button class="mode-btn" onclick="setMode('test')">🧪 Тестовый режим</button>
+        <div class="header">
+            <h1>📊 Google Sheets Viewer</h1>
+            <p class="subtitle">Просмотр содержимого Google таблицы в реальном времени</p>
+            
+            <div class="config-panel">
+                <div class="input-group">
+                    <label>🔗 ID таблицы Google Sheets</label>
+                    <input type="text" id="sheetId" placeholder="1eEgs0vcsdVr391t_m1EMLtJGZ2-EAkFTiftt2tcjbnM" value="1eEgs0vcsdVr391t_m1EMLtJGZ2-EAkFTiftt2tcjbnM">
+                    <small style="color: #666; display: block; margin-top: 5px;">
+                        ID можно взять из URL: https://docs.google.com/spreadsheets/d/ID_ТАБЛИЦЫ/edit
+                    </small>
                 </div>
                 
-                <div id="alert" class="alert"></div>
-                
-                <div class="info-box" id="infoBox">
-                    ⚙️ <strong>Как это работает:</strong><br>
-                    • Первая строка Google Sheets игнорируется (используется как заголовки)<br>
-                    • Все ячейки из <strong>ВТОРОЙ СТРОКИ</strong> превращаются в поля формы<br>
-                    • При добавлении нового ID во вторую строку — после загрузки поле появится автоматически
-                </div>
-
-                <button onclick="loadFields()" class="btn-primary" id="loadBtn">
-                    🔄 Загрузить поля из Google Sheets
-                </button>
-                
-                <div id="loading" style="display: none;">
-                    <div class="spinner"></div>
-                    <p style="text-align: center;">Загрузка полей из таблицы...</p>
+                <div class="input-group">
+                    <label>📄 Название листа (опционально)</label>
+                    <input type="text" id="sheetName" placeholder="Оставьте пустым для первого листа" value="Users">
                 </div>
                 
-                <div id="formContainer" style="display: none;">
-                    <form id="dynamicForm">
-                        <div id="fields"></div>
-                        <button type="submit" class="btn-secondary" id="submitBtn">
-                            💾 Сохранить данные в Google Sheets
-                        </button>
-                    </form>
+                <div class="input-group">
+                    <label>🌐 Метод получения данных</label>
+                    <select id="method">
+                        <option value="proxy">Через CORS прокси (рекомендуется)</option>
+                        <option value="direct">Прямой запрос (может не работать из-за CORS)</option>
+                    </select>
                 </div>
                 
-                <div class="status" id="status">
-                    Статус: ожидание настройки
-                </div>
+                <button onclick="loadSheetData()">🔄 Загрузить таблицу</button>
                 
-                <div class="debug-toggle" onclick="toggleDebug()">🔧 Показать техническую информацию</div>
-                <div id="debugPanel" class="debug-panel">
-                    <strong>📡 Отладка:</strong><br>
-                    <div id="debugContent">Нет данных</div>
-                </div>
+                <div id="status" class="status"></div>
             </div>
         </div>
+        
+        <div id="proxyWarning" class="proxy-warning">
+            ⚠️ Используется CORS прокси. Данные загружаются через публичный прокси-сервер. Для продакшена рекомендуется использовать свой бэкенд.
+        </div>
+        
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Загрузка данных...</p>
+        </div>
+        
+        <div id="tableContainer" class="table-container" style="display: none;"></div>
+        
+        <div id="stats" class="stats" style="display: none;"></div>
     </div>
 
     <script>
-        let currentMode = 'remote';
-        let formFields = [];
-        let isSubmitting = false;
-
-        function toggleDebug() {
-            const panel = document.getElementById('debugPanel');
-            panel.classList.toggle('show');
-        }
-
-        function addDebug(message, data = null) {
-            const debugContent = document.getElementById('debugContent');
-            const timestamp = new Date().toLocaleTimeString();
-            let debugHtml = debugContent.innerHTML;
-            debugHtml = `<div style="border-bottom: 1px solid #4a5568; padding: 4px 0;">[${timestamp}] ${message}</div>` + debugHtml;
-            if (data) {
-                debugHtml = `<div style="border-bottom: 1px solid #4a5568; padding: 4px 0; margin-left: 16px;">📦 Данные: ${JSON.stringify(data, null, 2).substring(0, 500)}</div>` + debugHtml;
-            }
-            debugContent.innerHTML = debugHtml.substring(0, 5000);
-        }
-
-        function getServerUrl() {
-            let url = document.getElementById('serverUrl').value.trim();
-            if (!url) {
-                showAlert('❌ Введите URL сервера n8n', 'error');
-                return null;
-            }
-            url = url.replace(/\/$/, '');
-            addDebug(`URL сервера: ${url}`);
-            return url;
-        }
-
-        function getUrls() {
-            const serverUrl = getServerUrl();
-            if (!serverUrl) return null;
-            return {
-                getFields: `${serverUrl}/webhook/get-fields`,
-                saveData: `${serverUrl}/webhook/save-data`
-            };
-        }
-
-        const TEST_FIELDS = [
-            { id: "email", label: "Email", type: "email", required: true, placeholder: "example@mail.com" },
-            { id: "full_name", label: "Полное имя", type: "text", required: true, placeholder: "Иван Петров" },
-            { id: "phone", label: "Телефон", type: "tel", required: true, placeholder: "+7 (999) 123-45-67" },
-            { id: "message", label: "Сообщение", type: "textarea", required: false, placeholder: "Ваше сообщение" }
+        // Конфигурация CORS прокси (публичные прокси для демонстрации)
+        const CORS_PROXIES = [
+            'https://api.allorigins.win/raw?url=',
+            'https://cors-anywhere.herokuapp.com/',
+            'https://corsproxy.io/?'
         ];
-
-        function setMode(mode) {
-            currentMode = mode;
-            const buttons = document.querySelectorAll('.mode-btn');
-            buttons.forEach(btn => {
-                if ((mode === 'remote' && btn.textContent.includes('Удаленный')) ||
-                    (mode === 'test' && btn.textContent.includes('Тестовый'))) {
-                    btn.classList.add('active');
-                } else {
-                    btn.classList.remove('active');
+        
+        let currentProxyIndex = 0;
+        
+        // Функция для получения данных через прокси
+        async function fetchWithProxy(url, proxyIndex = 0) {
+            if (proxyIndex >= CORS_PROXIES.length) {
+                throw new Error('Все прокси недоступны');
+            }
+            
+            const proxy = CORS_PROXIES[proxyIndex];
+            const proxyUrl = proxy + encodeURIComponent(url);
+            
+            try {
+                const response = await fetch(proxyUrl);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return await response.text();
+            } catch (error) {
+                console.warn(`Прокси ${proxyIndex} не работает:`, error);
+                return fetchWithProxy(url, proxyIndex + 1);
+            }
+        }
+        
+        // Функция для парсинга CSV в массив
+        function parseCSV(csvText) {
+            const rows = [];
+            const lines = csvText.split(/\r?\n/);
+            
+            for (let line of lines) {
+                if (line.trim() === '') continue;
+                
+                const row = [];
+                let inQuotes = false;
+                let currentCell = '';
+                
+                for (let i = 0; i < line.length; i++) {
+                    const char = line[i];
+                    
+                    if (char === '"') {
+                        inQuotes = !inQuotes;
+                    } else if (char === ',' && !inQuotes) {
+                        row.push(currentCell.trim());
+                        currentCell = '';
+                    } else {
+                        currentCell += char;
+                    }
                 }
+                row.push(currentCell.trim());
+                rows.push(row);
+            }
+            
+            return rows;
+        }
+        
+        // Функция загрузки данных из Google Sheets
+        async function loadSheetData() {
+            const sheetId = document.getElementById('sheetId').value.trim();
+            const sheetName = document.getElementById('sheetName').value.trim();
+            const method = document.getElementById('method').value;
+            
+            if (!sheetId) {
+                showStatus('Пожалуйста, введите ID таблицы', 'error');
+                return;
+            }
+            
+            // Показываем загрузку
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('tableContainer').style.display = 'none';
+            document.getElementById('stats').style.display = 'none';
+            document.getElementById('proxyWarning').style.display = 'none';
+            hideStatus();
+            
+            try {
+                let data;
+                
+                if (method === 'proxy') {
+                    document.getElementById('proxyWarning').style.display = 'block';
+                    
+                    // Формируем URL для экспорта в CSV (обход CORS)
+                    let exportUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
+                    if (sheetName) {
+                        exportUrl += `&gid=${await getSheetGID(sheetId, sheetName)}`;
+                    }
+                    
+                    const csvData = await fetchWithProxy(exportUrl);
+                    const parsedData = parseCSV(csvData);
+                    
+                    if (parsedData.length === 0) {
+                        throw new Error('Таблица пуста');
+                    }
+                    
+                    data = {
+                        values: parsedData,
+                        range: `A1:Z${parsedData.length}`
+                    };
+                } else {
+                    // Прямой запрос к Google Sheets API (требует API ключ)
+                    const apiKey = prompt('Для прямого доступа нужен Google Sheets API Key. Получите его в Google Cloud Console.\n\nВведите API Key (или оставьте пустым для использования прокси):');
+                    
+                    if (!apiKey) {
+                        throw new Error('API Key не указан. Используйте метод с прокси.');
+                    }
+                    
+                    let url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/`;
+                    if (sheetName) {
+                        url += `${encodeURIComponent(sheetName)}`;
+                    } else {
+                        url += `A:Z`;
+                    }
+                    url += `?key=${apiKey}`;
+                    
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error(`API Error: ${response.status}`);
+                    const jsonData = await response.json();
+                    data = jsonData;
+                }
+                
+                // Отображаем данные
+                displayTable(data.values || data.values);
+                
+                showStatus('✅ Данные успешно загружены!', 'success');
+                
+            } catch (error) {
+                console.error('Ошибка:', error);
+                showStatus(`❌ Ошибка загрузки: ${error.message}`, 'error');
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+        
+        // Получение GID листа по имени (для CSV экспорта)
+        async function getSheetGID(sheetId, sheetName) {
+            try {
+                const metadataUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/edit`;
+                const html = await fetchWithProxy(metadataUrl);
+                
+                // Парсим GID из HTML
+                const match = html.match(new RegExp(`gid="(\\d+)"[^>]*>${sheetName}<`));
+                if (match && match[1]) {
+                    return match[1];
+                }
+                
+                // Альтернативный метод - поиск в скриптах
+                const scriptMatch = html.match(/\\"gid\\":(\\d+),\\"name\\":\\"${sheetName}\\"/);
+                if (scriptMatch && scriptMatch[1]) {
+                    return scriptMatch[1];
+                }
+                
+                return '';
+            } catch (error) {
+                console.warn('Не удалось получить GID:', error);
+                return '';
+            }
+        }
+        
+        // Отображение таблицы
+        function displayTable(data) {
+            if (!data || data.length === 0) {
+                throw new Error('Нет данных для отображения');
+            }
+            
+            const headers = data[0] || [];
+            const rows = data.slice(1);
+            
+            // Создаем HTML таблицы
+            let tableHtml = '<table><thead><tr>';
+            
+            headers.forEach(header => {
+                tableHtml += `<th>${escapeHtml(header || '')}</th>`;
             });
             
-            if (mode === 'test') {
-                document.getElementById('infoBox').innerHTML = '🧪 <strong>Тестовый режим</strong><br>Используются демо-поля для проверки интерфейса. Данные никуда не отправляются.';
-                loadTestFields();
-            } else {
-                document.getElementById('infoBox').innerHTML = '🌐 <strong>Удаленный режим</strong><br>Введите URL сервера n8n и нажмите "Загрузить поля". Поля будут взяты из ВТОРОЙ строки Google Sheets.';
-                document.getElementById('formContainer').style.display = 'none';
-            }
-            addDebug(`Режим изменен: ${mode}`);
+            tableHtml += '</tr></thead><tbody>';
+            
+            rows.forEach(row => {
+                tableHtml += '<tr>';
+                headers.forEach((_, index) => {
+                    const value = row[index] || '';
+                    tableHtml += `<td>${escapeHtml(value)}</td>`;
+                });
+                tableHtml += '</tr>';
+            });
+            
+            tableHtml += '</tbody></table>';
+            
+            document.getElementById('tableContainer').innerHTML = tableHtml;
+            document.getElementById('tableContainer').style.display = 'block';
+            document.getElementById('loading').style.display = 'none';
+            
+            // Показываем статистику
+            const stats = document.getElementById('stats');
+            stats.innerHTML = `
+                📊 <strong>Статистика:</strong><br>
+                • Всего строк: ${data.length}<br>
+                • Всего колонок: ${headers.length}<br>
+                • Строк данных: ${rows.length}<br>
+                • Заголовки: ${headers.filter(h => h).join(', ')}
+            `;
+            stats.style.display = 'block';
         }
-
-        function showAlert(msg, type) {
-            const alertDiv = document.getElementById('alert');
-            alertDiv.className = `alert alert-${type}`;
-            alertDiv.innerHTML = msg;
-            alertDiv.style.display = 'block';
-            addDebug(`[${type.toUpperCase()}] ${msg}`);
+        
+        // Функция для экранирования HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Показ статуса
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+        }
+        
+        function hideStatus() {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = 'status';
+            statusDiv.style.display = 'none';
+        }
+        
+        // Загрузка примера при старте
+        window.addEventListener('DOMContentLoaded', () => {
+            // Автоматическая загрузка примера
             setTimeout(() => {
-                alertDiv.style.opacity = '0';
-                setTimeout(() => {
-                    alertDiv.style.display = 'none';
-                    alertDiv.style.opacity = '1';
-                }, 300);
-            }, 5000);
-        }
-
-        function showLoading(show) {
-            document.getElementById('loading').style.display = show ? 'block' : 'none';
-            document.getElementById('loadBtn').disabled = show;
-        }
-
-        function renderForm(fields) {
-            const container = document.getElementById('fields');
-            container.innerHTML = '';
-            
-            fields.forEach((field) => {
-                const div = document.createElement('div');
-                div.className = 'form-group';
-                const requiredMark = field.required ? '<span class="required">*</span>' : '';
-                
-                let inputHtml = '';
-                if (field.type === 'textarea') {
-                    inputHtml = `<textarea id="${field.id}" placeholder="${field.placeholder || ''}" rows="3" ${field.required ? 'required' : ''}></textarea>`;
-                } else {
-                    inputHtml = `<input type="${field.type}" id="${field.id}" placeholder="${field.placeholder || ''}" ${field.required ? 'required' : ''}>`;
+                if (confirm('Загрузить пример таблицы?')) {
+                    loadSheetData();
                 }
-                
-                div.innerHTML = `
-                    <label>${escapeHtml(field.label)} ${requiredMark}</label>
-                    ${inputHtml}
-                    <div class="error-message" id="${field.id}-error"></div>
-                `;
-                container.appendChild(div);
-                
-                const input = document.getElementById(field.id);
-                if (input) {
-                    input.addEventListener('input', () => validateField(field.id));
-                    input.addEventListener('blur', () => validateField(field.id));
-                }
-            });
-        }
-
-        function escapeHtml(str) {
-            if (!str) return '';
-            return str.replace(/[&<>]/g, function(m) {
-                if (m === '&') return '&amp;';
-                if (m === '<') return '&lt;';
-                if (m === '>') return '&gt;';
-                return m;
-            });
-        }
-
-        function validateField(fieldId) {
-            const input = document.getElementById(fieldId);
-            const errorDiv = document.getElementById(`${fieldId}-error`);
-            const field = formFields.find(f => f.id === fieldId);
-            
-            if (!input || !field) return true;
-            
-            const value = input.value.trim();
-            let isValid = true;
-            let msg = '';
-            
-            if (field.required && !value) {
-                isValid = false;
-                msg = '⚠️ Обязательное поле';
-            } else if (field.type === 'email' && value && !/^[^\s@]+@([^\s@]+\.)+[^\s@]+$/.test(value)) {
-                isValid = false;
-                msg = '❌ Неверный формат email';
-            } else if (field.type === 'tel' && value && !/^[\d\s+()-]{8,}$/.test(value)) {
-                isValid = false;
-                msg = '❌ Неверный формат телефона';
-            }
-            
-            if (!isValid) {
-                input.classList.add('error');
-                errorDiv.textContent = msg;
-                errorDiv.style.display = 'block';
-            } else {
-                input.classList.remove('error');
-                errorDiv.style.display = 'none';
-            }
-            
-            return isValid;
-        }
-
-        function validateForm() {
-            let valid = true;
-            formFields.forEach(f => {
-                if (!validateField(f.id)) valid = false;
-            });
-            return valid;
-        }
-
-        async function loadRemoteFields() {
-            const urls = getUrls();
-            if (!urls) throw new Error('URL не указан');
-            
-            addDebug(`Запрос к: ${urls.getFields}`);
-            
-            let response;
-            try {
-                response = await fetch(urls.getFields, {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                    }
-                });
-            } catch (fetchError) {
-                addDebug(`Ошибка сети: ${fetchError.message}`);
-                throw new Error(`Сетевая ошибка: ${fetchError.message}. Проверьте доступность сервера и CORS настройки.`);
-            }
-            
-            addDebug(`HTTP статус: ${response.status} ${response.statusText}`);
-            
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-            
-            // Получаем текст ответа для отладки
-            const responseText = await response.text();
-            addDebug(`Получен ответ (${responseText.length} байт): ${responseText.substring(0, 500)}`);
-            
-            if (!responseText || responseText.trim() === '') {
-                throw new Error('Сервер вернул пустой ответ. Проверьте настройки webhook в n8n.');
-            }
-            
-            let data;
-            try {
-                data = JSON.parse(responseText);
-            } catch (parseError) {
-                addDebug(`Ошибка парсинга JSON: ${parseError.message}`);
-                throw new Error(`Неверный формат JSON: ${parseError.message}. Ответ сервера: ${responseText.substring(0, 200)}`);
-            }
-            
-            addDebug(`Распарсенные данные:`, data);
-            
-            // Парсим полученные данные в поля формы
-            const fields = parseSheetDataToFields(data);
-            
-            if (!fields || fields.length === 0) {
-                throw new Error('В Google Sheets нет данных для полей (проверьте вторую строку)');
-            }
-            
-            return fields;
-        }
-
-        function parseSheetDataToFields(sheetData) {
-            addDebug(`Парсинг данных:`, sheetData);
-            
-            // Если пришел массив объектов с полями
-            if (Array.isArray(sheetData)) {
-                if (sheetData.length === 0) {
-                    return [];
-                }
-                
-                // Если это массив строк (значения из второй строки)
-                if (typeof sheetData[0] === 'string') {
-                    return sheetData.filter(name => name && name.trim()).map(fieldName => ({
-                        id: fieldName.toLowerCase().replace(/[^a-z0-9_]/g, '_'),
-                        label: fieldName,
-                        type: 'text',
-                        required: false,
-                        placeholder: `Введите ${fieldName}`
-                    }));
-                }
-                
-                // Если это массив объектов с детальной структурой
-                if (typeof sheetData[0] === 'object') {
-                    return sheetData.map(item => ({
-                        id: item.id || item.field || item.name || Object.keys(item)[0],
-                        label: item.label || item.name || item.id || 'Поле',
-                        type: item.type || 'text',
-                        required: item.required || false,
-                        placeholder: item.placeholder || ''
-                    }));
-                }
-            }
-            
-            // Если пришел объект с полем fields
-            if (sheetData.fields && Array.isArray(sheetData.fields)) {
-                return sheetData.fields;
-            }
-            
-            // Если пришел объект с полем data
-            if (sheetData.data && Array.isArray(sheetData.data)) {
-                return parseSheetDataToFields(sheetData.data);
-            }
-            
-            throw new Error('Не удалось распознать структуру полей. Ожидался массив полей или объект с полем "fields".');
-        }
-
-        async function loadTestFields() {
-            showLoading(true);
-            try {
-                formFields = TEST_FIELDS;
-                renderForm(formFields);
-                document.getElementById('infoBox').innerHTML = `🧪 Тестовый режим: загружено ${formFields.length} демо-полей`;
-                document.getElementById('status').innerHTML = `✅ Тестовый режим: ${formFields.length} полей`;
-                document.getElementById('formContainer').style.display = 'block';
-                showAlert('✅ Тестовые поля загружены', 'success');
-                addDebug(`Тестовые поля загружены: ${formFields.length} полей`);
-            } catch (err) {
-                showAlert(`❌ Ошибка: ${err.message}`, 'error');
-                addDebug(`Ошибка тестового режима: ${err.message}`);
-            } finally {
-                showLoading(false);
-            }
-        }
-
-        async function loadFields() {
-            if (currentMode === 'test') {
-                await loadTestFields();
-                return;
-            }
-            
-            const serverUrl = getServerUrl();
-            if (!serverUrl) return;
-            
-            showLoading(true);
-            document.getElementById('status').innerHTML = '🔄 Загрузка полей из Google Sheets...';
-            document.getElementById('formContainer').style.display = 'none';
-            
-            try {
-                formFields = await loadRemoteFields();
-                
-                renderForm(formFields);
-                
-                const fieldsInfo = formFields.map(f => f.label).join(', ');
-                document.getElementById('infoBox').innerHTML = `✅ <strong>Успешно загружено ${formFields.length} полей</strong><br>📋 Поля: ${fieldsInfo}<br>✨ Источник: вторая строка Google Sheets`;
-                document.getElementById('status').innerHTML = `✅ Подключено к ${serverUrl} | Загружено ${formFields.length} полей из второй строки`;
-                document.getElementById('formContainer').style.display = 'block';
-                showAlert(`✅ Форма загружена (${formFields.length} полей из второй строки таблицы)`, 'success');
-                addDebug(`Успешная загрузка: ${formFields.length} полей`);
-                
-            } catch (err) {
-                console.error('Load error:', err);
-                addDebug(`Критическая ошибка: ${err.message}`);
-                document.getElementById('infoBox').innerHTML = `❌ <strong>Ошибка загрузки</strong><br>${escapeHtml(err.message)}<br><br>💡 Проверьте:<br>• Правильность URL сервера n8n<br>• Активен ли webhook /get-fields в n8n<br>• В Google Sheets есть как минимум 2 строки (первая — заголовки, вторая — ID полей)<br>• Настроены ли CORS заголовки в n8n (Access-Control-Allow-Origin: *)<br>• Доступен ли сервер из браузера (нет блокировки CORS)`;
-                document.getElementById('status').innerHTML = `❌ Ошибка: ${err.message}`;
-                showAlert(`❌ Ошибка загрузки: ${err.message}`, 'error');
-                document.getElementById('formContainer').style.display = 'none';
-            } finally {
-                showLoading(false);
-            }
-        }
-
-        async function submitForm(e) {
-            e.preventDefault();
-            
-            if (isSubmitting) return;
-            
-            if (!validateForm()) {
-                showAlert('❌ Пожалуйста, исправьте ошибки в форме', 'error');
-                return;
-            }
-            
-            if (currentMode === 'test') {
-                showAlert('🧪 Тестовый режим: данные не отправлены, форма очищена', 'success');
-                formFields.forEach(f => {
-                    const inp = document.getElementById(f.id);
-                    if (inp) inp.value = '';
-                });
-                return;
-            }
-            
-            const urls = getUrls();
-            if (!urls) return;
-            
-            isSubmitting = true;
-            const btn = document.getElementById('submitBtn');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '⏳ Сохранение...';
-            btn.disabled = true;
-            
-            try {
-                const formData = {};
-                formFields.forEach(f => {
-                    const input = document.getElementById(f.id);
-                    if (input) {
-                        formData[f.id] = input.value.trim();
-                    }
-                });
-                
-                addDebug(`Отправка данных:`, formData);
-                
-                const response = await fetch(urls.saveData, {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({ 
-                        data: formData,
-                        timestamp: new Date().toISOString()
-                    })
-                });
-                
-                addDebug(`Ответ сервера: ${response.status}`);
-                
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    addDebug(`Ошибка ответа: ${errorText}`);
-                    throw new Error(`HTTP ${response.status}: ${errorText.substring(0, 100)}`);
-                }
-                
-                const result = await response.json();
-                addDebug(`Результат:`, result);
-                
-                if (result.success === false) {
-                    throw new Error(result.message || 'Ошибка сохранения');
-                }
-                
-                showAlert('✅ Данные успешно сохранены в Google Sheets!', 'success');
-                
-                formFields.forEach(f => {
-                    const inp = document.getElementById(f.id);
-                    if (inp) inp.value = '';
-                });
-                
-            } catch (err) {
-                console.error('Submit error:', err);
-                addDebug(`Ошибка отправки: ${err.message}`);
-                showAlert(`❌ Ошибка сохранения: ${err.message}`, 'error');
-            } finally {
-                isSubmitting = false;
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            }
-        }
-
-        document.getElementById('serverUrl').addEventListener('change', () => {
-            localStorage.setItem('n8n_server_url', document.getElementById('serverUrl').value);
-            addDebug(`URL сохранен в localStorage: ${document.getElementById('serverUrl').value}`);
-        });
-
-        const savedUrl = localStorage.getItem('n8n_server_url');
-        if (savedUrl) {
-            document.getElementById('serverUrl').value = savedUrl;
-            addDebug(`Загружен сохраненный URL: ${savedUrl}`);
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const form = document.getElementById('dynamicForm');
-            if (form) {
-                form.addEventListener('submit', submitForm);
-            }
-            addDebug('Страница загружена, ожидание действий пользователя');
+            }, 500);
         });
     </script>
 </body>
