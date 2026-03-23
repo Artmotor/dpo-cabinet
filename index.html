@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Google Sheets Динамическая форма</title>
+    <title>Динамическая форма - Google Sheets</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
     <style>
         * {
             margin: 0;
@@ -128,6 +129,11 @@
             font-weight: 600;
             cursor: pointer;
             margin-bottom: 10px;
+            transition: transform 0.2s;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
         }
 
         .btn-secondary {
@@ -141,6 +147,18 @@
             font-weight: 600;
             cursor: pointer;
             margin-bottom: 10px;
+            transition: transform 0.2s;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            background: #38a169;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
         }
 
         .alert {
@@ -160,6 +178,12 @@
             background: #fed7d7;
             color: #742a2a;
             border-left: 4px solid #f56565;
+        }
+
+        .alert-info {
+            background: #bee3f8;
+            color: #2c5282;
+            border-left: 4px solid #4299e1;
         }
 
         .info-box {
@@ -241,13 +265,28 @@
             color: #718096;
         }
 
-        .fields-info {
-            margin-top: 10px;
-            padding: 8px;
-            background: #e6fffa;
+        .debug-panel {
+            margin-top: 15px;
+            padding: 12px;
+            background: #2d3748;
+            color: #a0aec0;
             border-radius: 8px;
-            font-size: 12px;
-            color: #234e52;
+            font-family: monospace;
+            font-size: 11px;
+            display: none;
+            overflow-x: auto;
+        }
+
+        .debug-panel.show {
+            display: block;
+        }
+
+        .debug-toggle {
+            font-size: 11px;
+            color: #667eea;
+            cursor: pointer;
+            text-align: right;
+            margin-top: 8px;
         }
     </style>
 </head>
@@ -257,7 +296,7 @@
             <div class="header">
                 <h1>📊 Динамическая форма</h1>
                 <p>Интеграция с Google Sheets</p>
-                <div class="badge">✨ Первая строка — заголовки (игнорируются) | Вторая строка — поля формы ✨</div>
+                <div class="badge">✨ Первая строка — заголовки | Вторая строка — поля формы ✨</div>
             </div>
             <div class="content">
                 <div class="config-section">
@@ -279,8 +318,7 @@
                     ⚙️ <strong>Как это работает:</strong><br>
                     • Первая строка Google Sheets игнорируется (используется как заголовки)<br>
                     • Все ячейки из <strong>ВТОРОЙ СТРОКИ</strong> превращаются в поля формы<br>
-                    • При добавлении нового ID во вторую строку — после загрузки поле появится автоматически<br>
-                    • Нажмите "Загрузить поля" для получения структуры из таблицы
+                    • При добавлении нового ID во вторую строку — после загрузки поле появится автоматически
                 </div>
 
                 <button onclick="loadFields()" class="btn-primary" id="loadBtn">
@@ -304,6 +342,12 @@
                 <div class="status" id="status">
                     Статус: ожидание настройки
                 </div>
+                
+                <div class="debug-toggle" onclick="toggleDebug()">🔧 Показать техническую информацию</div>
+                <div id="debugPanel" class="debug-panel">
+                    <strong>📡 Отладка:</strong><br>
+                    <div id="debugContent">Нет данных</div>
+                </div>
             </div>
         </div>
     </div>
@@ -313,6 +357,22 @@
         let formFields = [];
         let isSubmitting = false;
 
+        function toggleDebug() {
+            const panel = document.getElementById('debugPanel');
+            panel.classList.toggle('show');
+        }
+
+        function addDebug(message, data = null) {
+            const debugContent = document.getElementById('debugContent');
+            const timestamp = new Date().toLocaleTimeString();
+            let debugHtml = debugContent.innerHTML;
+            debugHtml = `<div style="border-bottom: 1px solid #4a5568; padding: 4px 0;">[${timestamp}] ${message}</div>` + debugHtml;
+            if (data) {
+                debugHtml = `<div style="border-bottom: 1px solid #4a5568; padding: 4px 0; margin-left: 16px;">📦 Данные: ${JSON.stringify(data, null, 2).substring(0, 500)}</div>` + debugHtml;
+            }
+            debugContent.innerHTML = debugHtml.substring(0, 5000);
+        }
+
         function getServerUrl() {
             let url = document.getElementById('serverUrl').value.trim();
             if (!url) {
@@ -320,6 +380,7 @@
                 return null;
             }
             url = url.replace(/\/$/, '');
+            addDebug(`URL сервера: ${url}`);
             return url;
         }
 
@@ -332,7 +393,6 @@
             };
         }
 
-        // Тестовые поля для демонстрации
         const TEST_FIELDS = [
             { id: "email", label: "Email", type: "email", required: true, placeholder: "example@mail.com" },
             { id: "full_name", label: "Полное имя", type: "text", required: true, placeholder: "Иван Петров" },
@@ -359,6 +419,7 @@
                 document.getElementById('infoBox').innerHTML = '🌐 <strong>Удаленный режим</strong><br>Введите URL сервера n8n и нажмите "Загрузить поля". Поля будут взяты из ВТОРОЙ строки Google Sheets.';
                 document.getElementById('formContainer').style.display = 'none';
             }
+            addDebug(`Режим изменен: ${mode}`);
         }
 
         function showAlert(msg, type) {
@@ -366,6 +427,7 @@
             alertDiv.className = `alert alert-${type}`;
             alertDiv.innerHTML = msg;
             alertDiv.style.display = 'block';
+            addDebug(`[${type.toUpperCase()}] ${msg}`);
             setTimeout(() => {
                 alertDiv.style.opacity = '0';
                 setTimeout(() => {
@@ -397,7 +459,7 @@
                 }
                 
                 div.innerHTML = `
-                    <label>${field.label} ${requiredMark}</label>
+                    <label>${escapeHtml(field.label)} ${requiredMark}</label>
                     ${inputHtml}
                     <div class="error-message" id="${field.id}-error"></div>
                 `;
@@ -408,6 +470,16 @@
                     input.addEventListener('input', () => validateField(field.id));
                     input.addEventListener('blur', () => validateField(field.id));
                 }
+            });
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
             });
         }
 
@@ -453,26 +525,84 @@
             return valid;
         }
 
-        // Преобразование данных из Google Sheets в поля формы
-        // Ожидаем, что n8n вернет данные из ВТОРОЙ строки таблицы
+        async function loadRemoteFields() {
+            const urls = getUrls();
+            if (!urls) throw new Error('URL не указан');
+            
+            addDebug(`Запрос к: ${urls.getFields}`);
+            
+            let response;
+            try {
+                response = await fetch(urls.getFields, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                    }
+                });
+            } catch (fetchError) {
+                addDebug(`Ошибка сети: ${fetchError.message}`);
+                throw new Error(`Сетевая ошибка: ${fetchError.message}. Проверьте доступность сервера и CORS настройки.`);
+            }
+            
+            addDebug(`HTTP статус: ${response.status} ${response.statusText}`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            // Получаем текст ответа для отладки
+            const responseText = await response.text();
+            addDebug(`Получен ответ (${responseText.length} байт): ${responseText.substring(0, 500)}`);
+            
+            if (!responseText || responseText.trim() === '') {
+                throw new Error('Сервер вернул пустой ответ. Проверьте настройки webhook в n8n.');
+            }
+            
+            let data;
+            try {
+                data = JSON.parse(responseText);
+            } catch (parseError) {
+                addDebug(`Ошибка парсинга JSON: ${parseError.message}`);
+                throw new Error(`Неверный формат JSON: ${parseError.message}. Ответ сервера: ${responseText.substring(0, 200)}`);
+            }
+            
+            addDebug(`Распарсенные данные:`, data);
+            
+            // Парсим полученные данные в поля формы
+            const fields = parseSheetDataToFields(data);
+            
+            if (!fields || fields.length === 0) {
+                throw new Error('В Google Sheets нет данных для полей (проверьте вторую строку)');
+            }
+            
+            return fields;
+        }
+
         function parseSheetDataToFields(sheetData) {
+            addDebug(`Парсинг данных:`, sheetData);
+            
             // Если пришел массив объектов с полями
             if (Array.isArray(sheetData)) {
+                if (sheetData.length === 0) {
+                    return [];
+                }
+                
                 // Если это массив строк (значения из второй строки)
-                if (sheetData.length > 0 && typeof sheetData[0] === 'string') {
-                    return sheetData.map(fieldName => ({
-                        id: fieldName.toLowerCase().replace(/\s+/g, '_'),
+                if (typeof sheetData[0] === 'string') {
+                    return sheetData.filter(name => name && name.trim()).map(fieldName => ({
+                        id: fieldName.toLowerCase().replace(/[^a-z0-9_]/g, '_'),
                         label: fieldName,
                         type: 'text',
                         required: false,
                         placeholder: `Введите ${fieldName}`
                     }));
                 }
+                
                 // Если это массив объектов с детальной структурой
-                if (sheetData.length > 0 && typeof sheetData[0] === 'object') {
+                if (typeof sheetData[0] === 'object') {
                     return sheetData.map(item => ({
-                        id: item.id || item.field || item.name,
-                        label: item.label || item.name || item.id,
+                        id: item.id || item.field || item.name || Object.keys(item)[0],
+                        label: item.label || item.name || item.id || 'Поле',
                         type: item.type || 'text',
                         required: item.required || false,
                         placeholder: item.placeholder || ''
@@ -485,34 +615,12 @@
                 return sheetData.fields;
             }
             
-            throw new Error('Не удалось распознать структуру полей');
-        }
-
-        async function loadRemoteFields() {
-            const urls = getUrls();
-            if (!urls) throw new Error('URL не указан');
-            
-            const response = await fetch(urls.getFields, {
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json',
-                }
-            });
-            
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            // Если пришел объект с полем data
+            if (sheetData.data && Array.isArray(sheetData.data)) {
+                return parseSheetDataToFields(sheetData.data);
             }
             
-            const data = await response.json();
-            
-            // Парсим полученные данные в поля формы
-            const fields = parseSheetDataToFields(data);
-            
-            if (!fields || fields.length === 0) {
-                throw new Error('В Google Sheets нет данных для полей (проверьте вторую строку)');
-            }
-            
-            return fields;
+            throw new Error('Не удалось распознать структуру полей. Ожидался массив полей или объект с полем "fields".');
         }
 
         async function loadTestFields() {
@@ -524,8 +632,10 @@
                 document.getElementById('status').innerHTML = `✅ Тестовый режим: ${formFields.length} полей`;
                 document.getElementById('formContainer').style.display = 'block';
                 showAlert('✅ Тестовые поля загружены', 'success');
+                addDebug(`Тестовые поля загружены: ${formFields.length} полей`);
             } catch (err) {
                 showAlert(`❌ Ошибка: ${err.message}`, 'error');
+                addDebug(`Ошибка тестового режима: ${err.message}`);
             } finally {
                 showLoading(false);
             }
@@ -542,6 +652,7 @@
             
             showLoading(true);
             document.getElementById('status').innerHTML = '🔄 Загрузка полей из Google Sheets...';
+            document.getElementById('formContainer').style.display = 'none';
             
             try {
                 formFields = await loadRemoteFields();
@@ -553,10 +664,12 @@
                 document.getElementById('status').innerHTML = `✅ Подключено к ${serverUrl} | Загружено ${formFields.length} полей из второй строки`;
                 document.getElementById('formContainer').style.display = 'block';
                 showAlert(`✅ Форма загружена (${formFields.length} полей из второй строки таблицы)`, 'success');
+                addDebug(`Успешная загрузка: ${formFields.length} полей`);
                 
             } catch (err) {
                 console.error('Load error:', err);
-                document.getElementById('infoBox').innerHTML = `❌ <strong>Ошибка загрузки</strong><br>${err.message}<br><br>💡 Проверьте:<br>• Правильность URL сервера n8n<br>• Активен ли webhook /get-fields<br>• В Google Sheets есть как минимум 2 строки (первая — заголовки, вторая — ID полей)<br>• Настроены ли CORS заголовки в n8n`;
+                addDebug(`Критическая ошибка: ${err.message}`);
+                document.getElementById('infoBox').innerHTML = `❌ <strong>Ошибка загрузки</strong><br>${escapeHtml(err.message)}<br><br>💡 Проверьте:<br>• Правильность URL сервера n8n<br>• Активен ли webhook /get-fields в n8n<br>• В Google Sheets есть как минимум 2 строки (первая — заголовки, вторая — ID полей)<br>• Настроены ли CORS заголовки в n8n (Access-Control-Allow-Origin: *)<br>• Доступен ли сервер из браузера (нет блокировки CORS)`;
                 document.getElementById('status').innerHTML = `❌ Ошибка: ${err.message}`;
                 showAlert(`❌ Ошибка загрузки: ${err.message}`, 'error');
                 document.getElementById('formContainer').style.display = 'none';
@@ -576,8 +689,7 @@
             }
             
             if (currentMode === 'test') {
-                showAlert('🧪 Тестовый режим: данные не отправлены', 'success');
-                // Очищаем форму в тестовом режиме
+                showAlert('🧪 Тестовый режим: данные не отправлены, форма очищена', 'success');
                 formFields.forEach(f => {
                     const inp = document.getElementById(f.id);
                     if (inp) inp.value = '';
@@ -595,7 +707,6 @@
             btn.disabled = true;
             
             try {
-                // Формируем данные для отправки
                 const formData = {};
                 formFields.forEach(f => {
                     const input = document.getElementById(f.id);
@@ -603,6 +714,8 @@
                         formData[f.id] = input.value.trim();
                     }
                 });
+                
+                addDebug(`Отправка данных:`, formData);
                 
                 const response = await fetch(urls.saveData, {
                     method: 'POST',
@@ -616,12 +729,16 @@
                     })
                 });
                 
+                addDebug(`Ответ сервера: ${response.status}`);
+                
                 if (!response.ok) {
                     const errorText = await response.text();
-                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                    addDebug(`Ошибка ответа: ${errorText}`);
+                    throw new Error(`HTTP ${response.status}: ${errorText.substring(0, 100)}`);
                 }
                 
                 const result = await response.json();
+                addDebug(`Результат:`, result);
                 
                 if (result.success === false) {
                     throw new Error(result.message || 'Ошибка сохранения');
@@ -629,7 +746,6 @@
                 
                 showAlert('✅ Данные успешно сохранены в Google Sheets!', 'success');
                 
-                // Очищаем форму
                 formFields.forEach(f => {
                     const inp = document.getElementById(f.id);
                     if (inp) inp.value = '';
@@ -637,6 +753,7 @@
                 
             } catch (err) {
                 console.error('Submit error:', err);
+                addDebug(`Ошибка отправки: ${err.message}`);
                 showAlert(`❌ Ошибка сохранения: ${err.message}`, 'error');
             } finally {
                 isSubmitting = false;
@@ -645,23 +762,23 @@
             }
         }
 
-        // Сохраняем URL в localStorage
         document.getElementById('serverUrl').addEventListener('change', () => {
             localStorage.setItem('n8n_server_url', document.getElementById('serverUrl').value);
+            addDebug(`URL сохранен в localStorage: ${document.getElementById('serverUrl').value}`);
         });
 
-        // Загружаем сохраненный URL
         const savedUrl = localStorage.getItem('n8n_server_url');
         if (savedUrl) {
             document.getElementById('serverUrl').value = savedUrl;
+            addDebug(`Загружен сохраненный URL: ${savedUrl}`);
         }
 
-        // Инициализация формы
         document.addEventListener('DOMContentLoaded', () => {
             const form = document.getElementById('dynamicForm');
             if (form) {
                 form.addEventListener('submit', submitForm);
             }
+            addDebug('Страница загружена, ожидание действий пользователя');
         });
     </script>
 </body>
