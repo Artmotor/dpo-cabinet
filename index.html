@@ -50,31 +50,32 @@
             padding: 30px;
         }
 
-        .url-config {
+        .config-section {
             background: #f7fafc;
-            padding: 15px;
+            padding: 20px;
             border-radius: 12px;
             margin-bottom: 20px;
             border: 1px solid #e2e8f0;
         }
 
-        .url-config label {
+        .config-section label {
             display: block;
             margin-bottom: 8px;
             font-weight: 600;
             color: #2d3748;
         }
 
-        .url-config input {
+        .config-section input {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             border: 2px solid #e2e8f0;
             border-radius: 8px;
             font-size: 14px;
             font-family: monospace;
+            margin-bottom: 10px;
         }
 
-        .url-config input:focus {
+        .config-section input:focus {
             outline: none;
             border-color: #667eea;
         }
@@ -152,6 +153,7 @@
         input:focus {
             outline: none;
             border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
         input.error {
@@ -189,6 +191,11 @@
             cursor: not-allowed;
         }
 
+        .btn-secondary {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            margin-bottom: 15px;
+        }
+
         .spinner {
             width: 40px;
             height: 40px;
@@ -220,32 +227,33 @@
         <div class="card">
             <div class="header">
                 <h1>📊 Динамическая форма</h1>
-                <p>Поля из Google Sheets</p>
+                <p>Интеграция с Google Sheets</p>
             </div>
             <div class="content">
-                <div class="url-config">
+                <div class="config-section">
                     <label>🔗 URL сервера n8n:</label>
-                    <input type="text" id="serverUrl" placeholder="https://ваш-сервер-n8n.com" value="">
-                    <small style="color: #718096; display: block; margin-top: 5px;">
-                        Вставьте production URL из n8n (например: https://4yzm-gv2z-j6ws.gw-1a.dockhost.net)
+                    <input type="text" id="serverUrl" placeholder="https://ваш-сервер.n8n.io" value="">
+                    <small style="color: #718096;">
+                        Вставьте production URL из n8n (например: https://xxxxx.gw.dockhost.net)
                     </small>
                 </div>
 
                 <div class="mode-switch">
-                    <button class="mode-btn active" onclick="setMode('remote')">🌐 Удаленный</button>
-                    <button class="mode-btn" onclick="setMode('test')">🧪 Тестовый</button>
+                    <button class="mode-btn active" onclick="setMode('remote')">🌐 Удаленный режим</button>
+                    <button class="mode-btn" onclick="setMode('test')">🧪 Тестовый режим</button>
                 </div>
                 
                 <div id="alert" class="alert"></div>
                 
                 <div class="info-box" id="infoBox">
-                    ⚡ Настройте URL и нажмите "Загрузить поля"
+                    ⚡ Настройте URL сервера и нажмите "Загрузить поля"
                 </div>
 
-                <button onclick="loadFields()" style="margin-bottom: 20px; background: #48bb78;">🔄 Загрузить поля</button>
+                <button onclick="loadFields()" class="btn-secondary" id="loadBtn">🔄 Загрузить поля</button>
                 
                 <div id="loading" style="display: none;">
                     <div class="spinner"></div>
+                    <p style="text-align: center; margin-top: 10px;">Загрузка полей...</p>
                 </div>
                 
                 <form id="form" style="display: none;">
@@ -271,7 +279,6 @@
                 showAlert('❌ Введите URL сервера n8n', 'error');
                 return null;
             }
-            // Убираем слеш в конце если есть
             url = url.replace(/\/$/, '');
             return url;
         }
@@ -288,17 +295,28 @@
         const TEST_FIELDS = [
             { id: "email", label: "Email", type: "email", required: true, placeholder: "example@mail.com" },
             { id: "name", label: "Имя", type: "text", required: true, placeholder: "Ваше имя" },
-            { id: "phone", label: "Телефон", type: "tel", required: true, placeholder: "+7 (999) 123-45-67" }
+            { id: "phone", label: "Телефон", type: "tel", required: true, placeholder: "+7 (999) 123-45-67" },
+            { id: "message", label: "Сообщение", type: "text", required: false, placeholder: "Ваше сообщение" }
         ];
 
         function setMode(mode) {
             currentMode = mode;
-            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+            const buttons = document.querySelectorAll('.mode-btn');
+            buttons.forEach(btn => {
+                if ((mode === 'remote' && btn.textContent.includes('Удаленный')) ||
+                    (mode === 'test' && btn.textContent.includes('Тестовый'))) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
             
             if (mode === 'test') {
                 document.getElementById('infoBox').innerHTML = '🧪 Тестовый режим: используются демо-поля';
                 loadTestFields();
+            } else {
+                document.getElementById('infoBox').innerHTML = '🌐 Удаленный режим: введите URL и нажмите "Загрузить поля"';
+                document.getElementById('form').style.display = 'none';
             }
         }
 
@@ -308,30 +326,30 @@
             alertDiv.innerHTML = msg;
             alertDiv.style.display = 'block';
             setTimeout(() => {
-                alertDiv.style.display = 'none';
+                alertDiv.style.opacity = '0';
+                setTimeout(() => {
+                    alertDiv.style.display = 'none';
+                    alertDiv.style.opacity = '1';
+                }, 300);
             }, 5000);
         }
 
         function showLoading(show) {
             document.getElementById('loading').style.display = show ? 'block' : 'none';
-            if (!show && formFields.length > 0) {
-                document.getElementById('form').style.display = 'block';
-            } else if (!show && formFields.length === 0) {
-                document.getElementById('form').style.display = 'none';
-            }
+            document.getElementById('loadBtn').disabled = show;
         }
 
         function renderForm(fields) {
             const container = document.getElementById('fields');
             container.innerHTML = '';
             
-            fields.forEach(field => {
+            fields.forEach((field, index) => {
                 const div = document.createElement('div');
                 div.className = 'form-group';
                 const requiredMark = field.required ? '<span style="color:#f56565"> *</span>' : '';
                 div.innerHTML = `
                     <label>${field.label}${requiredMark}</label>
-                    <input type="${field.type}" id="${field.id}" placeholder="${field.placeholder}" ${field.required ? 'required' : ''}>
+                    <input type="${field.type}" id="${field.id}" placeholder="${field.placeholder || ''}" ${field.required ? 'required' : ''}>
                     <div class="error-message" id="${field.id}-error"></div>
                 `;
                 container.appendChild(div);
@@ -355,13 +373,13 @@
             
             if (field.required && !value) {
                 isValid = false;
-                msg = 'Обязательное поле';
+                msg = '⚠️ Обязательное поле';
             } else if (field.type === 'email' && value && !/^[^\s@]+@([^\s@]+\.)+[^\s@]+$/.test(value)) {
                 isValid = false;
-                msg = 'Неверный email';
+                msg = '❌ Неверный формат email';
             } else if (field.type === 'tel' && value && !/^[\d\s+()-]{10,}$/.test(value)) {
                 isValid = false;
-                msg = 'Неверный телефон';
+                msg = '❌ Неверный формат телефона';
             }
             
             if (!isValid) {
@@ -386,37 +404,50 @@
 
         async function loadRemoteFields() {
             const urls = getUrls();
-            if (!urls) return;
+            if (!urls) throw new Error('URL не указан');
             
-            try {
-                const response = await fetch(urls.getFields, {
-                    method: 'GET',
-                    headers: { 'Accept': 'application/json' }
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
+            const response = await fetch(urls.getFields, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
                 }
-                
-                const data = await response.json();
-                return data.fields || data;
-            } catch (err) {
-                throw new Error(`Не удалось загрузить поля: ${err.message}`);
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            
+            if (Array.isArray(data)) {
+                return data;
+            } else if (data.fields && Array.isArray(data.fields)) {
+                return data.fields;
+            } else {
+                throw new Error('Неверный формат ответа от сервера');
             }
         }
 
-        function loadTestFields() {
-            formFields = TEST_FIELDS;
-            renderForm(formFields);
-            document.getElementById('infoBox').innerHTML = `🧪 Тестовый режим: ${formFields.length} полей`;
-            document.getElementById('status').innerHTML = `Статус: тестовый режим (${formFields.length} полей)`;
-            showAlert('Тестовый режим активирован', 'success');
-            showLoading(false);
+        async function loadTestFields() {
+            showLoading(true);
+            try {
+                formFields = TEST_FIELDS;
+                renderForm(formFields);
+                document.getElementById('infoBox').innerHTML = `🧪 Тестовый режим: загружено ${formFields.length} полей`;
+                document.getElementById('status').innerHTML = `✅ Тестовый режим: ${formFields.length} полей`;
+                document.getElementById('form').style.display = 'block';
+                showAlert('✅ Тестовые поля загружены', 'success');
+            } catch (err) {
+                showAlert(`❌ Ошибка: ${err.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
         }
 
         async function loadFields() {
             if (currentMode === 'test') {
-                loadTestFields();
+                await loadTestFields();
                 return;
             }
             
@@ -434,17 +465,19 @@
                 }
                 
                 renderForm(formFields);
-                document.getElementById('infoBox').innerHTML = `✅ Загружено ${formFields.length} полей`;
-                document.getElementById('status').innerHTML = `Статус: подключено к ${serverUrl} (${formFields.length} полей)`;
-                showAlert(`✅ Форма загружена, ${formFields.length} полей`, 'success');
-                showLoading(false);
+                document.getElementById('infoBox').innerHTML = `✅ Загружено ${formFields.length} полей из Google Sheets`;
+                document.getElementById('status').innerHTML = `✅ Подключено к ${serverUrl} | ${formFields.length} полей`;
+                document.getElementById('form').style.display = 'block';
+                showAlert(`✅ Форма загружена (${formFields.length} полей)`, 'success');
                 
             } catch (err) {
                 console.error('Load error:', err);
-                document.getElementById('infoBox').innerHTML = `❌ Ошибка: ${err.message}<br><br>💡 Проверьте:<br>• URL сервера<br>• Активен ли webhook в n8n<br>• Настроен ли CORS`;
-                showAlert(`Ошибка: ${err.message}`, 'error');
+                document.getElementById('infoBox').innerHTML = `❌ Ошибка: ${err.message}<br><br>💡 Проверьте:<br>• Правильность URL<br>• Активен ли webhook в n8n<br>• Настроены ли CORS заголовки<br>• Есть ли данные в Google Sheets`;
+                document.getElementById('status').innerHTML = `❌ Ошибка: ${err.message}`;
+                showAlert(`❌ Ошибка загрузки: ${err.message}`, 'error');
+                document.getElementById('form').style.display = 'none';
+            } finally {
                 showLoading(false);
-                document.getElementById('status').innerHTML = `Статус: ошибка подключения`;
             }
         }
 
@@ -454,12 +487,12 @@
             if (isSubmitting) return;
             
             if (!validateForm()) {
-                showAlert('❌ Исправьте ошибки в форме', 'error');
+                showAlert('❌ Пожалуйста, исправьте ошибки в форме', 'error');
                 return;
             }
             
             if (currentMode === 'test') {
-                showAlert('🧪 Тестовый режим: данные не отправлены', 'success');
+                showAlert('🧪 Тестовый режим: данные не отправлены, форма очищена', 'success');
                 formFields.forEach(f => {
                     const inp = document.getElementById(f.id);
                     if (inp) inp.value = '';
@@ -481,18 +514,29 @@
                 formFields.forEach(f => {
                     const input = document.getElementById(f.id);
                     if (input && input.value.trim()) {
-                        data.push({ id: f.id, value: input.value.trim() });
+                        data.push({ 
+                            id: f.id, 
+                            value: input.value.trim(),
+                            label: f.label
+                        });
                     }
                 });
                 
                 const response = await fetch(urls.saveData, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ fields: data })
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        fields: data,
+                        timestamp: new Date().toISOString()
+                    })
                 });
                 
                 if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
                 }
                 
                 const result = await response.json();
@@ -501,7 +545,7 @@
                     throw new Error(result.message || 'Ошибка сохранения');
                 }
                 
-                showAlert('✅ Данные сохранены в Google Sheets!', 'success');
+                showAlert('✅ Данные успешно сохранены в Google Sheets!', 'success');
                 
                 // Очищаем форму
                 formFields.forEach(f => {
@@ -510,7 +554,8 @@
                 });
                 
             } catch (err) {
-                showAlert(`❌ Ошибка: ${err.message}`, 'error');
+                console.error('Submit error:', err);
+                showAlert(`❌ Ошибка сохранения: ${err.message}`, 'error');
             } finally {
                 isSubmitting = false;
                 btn.innerHTML = originalText;
@@ -518,8 +563,20 @@
             }
         }
 
+        // Инициализация
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('form').addEventListener('submit', submitForm);
+            
+            // Попытка загрузить сохраненный URL из localStorage
+            const savedUrl = localStorage.getItem('n8n_server_url');
+            if (savedUrl) {
+                document.getElementById('serverUrl').value = savedUrl;
+            }
+            
+            // Сохраняем URL при изменении
+            document.getElementById('serverUrl').addEventListener('change', () => {
+                localStorage.setItem('n8n_server_url', document.getElementById('serverUrl').value);
+            });
         });
     </script>
 </body>
