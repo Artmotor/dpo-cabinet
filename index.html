@@ -2,9 +2,8 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Динамическая форма - Google Sheets</title>
-    <link rel="icon" href="data:,"> <!-- Убираем запрос favicon -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Динамическая форма из Google Sheets | Авто-поля из второй строки</title>
     <style>
         * {
             margin: 0;
@@ -13,180 +12,180 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(145deg, #f0f4ff 0%, #e6edfc 100%);
             min-height: 100vh;
-            padding: 20px;
+            padding: 32px 20px;
         }
 
         .container {
-            max-width: 800px;
+            max-width: 1000px;
             margin: 0 auto;
         }
 
         .card {
-            background: white;
-            border-radius: 24px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            background: rgba(255,255,255,0.98);
+            backdrop-filter: blur(0px);
+            border-radius: 2rem;
+            box-shadow: 0 25px 45px -12px rgba(0,0,0,0.25), 0 1px 2px rgba(0,0,0,0.05);
             overflow: hidden;
+            transition: all 0.2s ease;
         }
 
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(115deg, #1e2a78 0%, #2b3b8c 100%);
             color: white;
-            padding: 30px;
+            padding: 28px 32px;
             text-align: center;
         }
 
         .header h1 {
-            font-size: 28px;
-            margin-bottom: 10px;
+            font-size: 1.9rem;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
         }
 
         .header p {
-            opacity: 0.9;
+            opacity: 0.85;
+            font-size: 0.95rem;
+        }
+
+        .badge {
+            background: #ffd966;
+            color: #1e2a3e;
+            padding: 4px 12px;
+            border-radius: 60px;
+            font-size: 0.75rem;
+            font-weight: 600;
         }
 
         .content {
-            padding: 30px;
+            padding: 28px 32px 36px;
         }
 
-        .config-section {
-            background: #f7fafc;
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            border: 1px solid #e2e8f0;
+        .config-panel {
+            background: #f8fafd;
+            border-radius: 1.5rem;
+            padding: 20px 24px;
+            margin-bottom: 28px;
+            border: 1px solid #e2edf7;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
         }
 
-        .config-section label {
-            display: block;
-            margin-bottom: 8px;
+        .input-group {
+            margin-bottom: 18px;
+        }
+
+        .input-group label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
             font-weight: 600;
-            color: #2d3748;
+            color: #1e293b;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
         }
 
-        .config-section input {
+        .input-group input {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 14px;
-            font-family: monospace;
-            margin-bottom: 10px;
+            padding: 12px 16px;
+            border: 1.5px solid #dce5f0;
+            border-radius: 1rem;
+            font-size: 0.9rem;
+            font-family: 'Monaco', 'Menlo', monospace;
+            transition: 0.2s;
+            background: white;
         }
 
-        .config-section input:focus {
+        .input-group input:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #3b5bdb;
+            box-shadow: 0 0 0 3px rgba(59,91,219,0.2);
+        }
+
+        .info-hint {
+            font-size: 0.75rem;
+            color: #4b5563;
+            margin-top: 6px;
+            background: #eef3ff;
+            padding: 6px 12px;
+            border-radius: 12px;
+            display: inline-block;
         }
 
         .mode-switch {
             display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
+            gap: 12px;
+            margin: 20px 0 16px;
         }
 
         .mode-btn {
             flex: 1;
-            padding: 12px;
-            background: #f7fafc;
-            border: 2px solid #e2e8f0;
-            cursor: pointer;
-            border-radius: 10px;
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            padding: 10px 12px;
+            border-radius: 2rem;
             font-weight: 600;
-            transition: all 0.3s;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.85rem;
         }
 
         .mode-btn.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #2c3e8f;
+            border-color: #2c3e8f;
             color: white;
-            border-color: #667eea;
+            box-shadow: 0 4px 10px rgba(44,62,143,0.2);
         }
 
-        .info-box {
-            background: #f7fafc;
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            border-left: 4px solid #667eea;
-            font-size: 14px;
+        .action-bar {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            margin: 20px 0 24px;
         }
 
-        .alert {
-            padding: 12px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            display: none;
-        }
-
-        .alert-success {
-            background: #c6f6d5;
-            color: #22543d;
-            border-left: 4px solid #48bb78;
-        }
-
-        .alert-error {
-            background: #fed7d7;
-            color: #742a2a;
-            border-left: 4px solid #f56565;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #2d3748;
-        }
-
-        input, select, textarea {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
-            font-size: 14px;
-            transition: all 0.3s;
-            font-family: inherit;
-        }
-
-        input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        input.error, select.error, textarea.error {
-            border-color: #f56565;
-            background: #fff5f5;
-        }
-
-        .error-message {
-            color: #f56565;
-            font-size: 12px;
-            margin-top: 5px;
-            display: none;
-        }
-
-        button {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .btn-primary {
+            background: linear-gradient(95deg, #2c3e8f, #1e2a6e);
             color: white;
             border: none;
-            border-radius: 10px;
-            font-size: 16px;
+            padding: 12px 28px;
+            border-radius: 2rem;
             font-weight: 600;
+            font-size: 0.9rem;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        button:hover:not(:disabled) {
+        .btn-secondary {
+            background: white;
+            border: 1.5px solid #cbd5e6;
+            padding: 12px 28px;
+            border-radius: 2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-primary:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            background: #1f2a6e;
+            box-shadow: 0 10px 18px -8px rgba(0,0,0,0.2);
+        }
+
+        .btn-secondary:hover {
+            background: #f1f5f9;
+            border-color: #9aa9c1;
         }
 
         button:disabled {
@@ -194,546 +193,554 @@
             cursor: not-allowed;
         }
 
-        .btn-secondary {
-            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
-            margin-bottom: 15px;
+        .alert {
+            padding: 14px 18px;
+            border-radius: 1.2rem;
+            margin-bottom: 22px;
+            display: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background: #e0f7ea;
+            border-left: 5px solid #2b8c4e;
+            color: #14532d;
+        }
+
+        .alert-error {
+            background: #ffe9e9;
+            border-left: 5px solid #d14545;
+            color: #7f2a2a;
+        }
+
+        .info-box {
+            background: #eef2ff;
+            padding: 14px 20px;
+            border-radius: 1.2rem;
+            margin-bottom: 24px;
+            font-size: 0.85rem;
+            border-left: 5px solid #3b5bdb;
+        }
+
+        .form-card {
+            background: #ffffff;
+            border-radius: 1.5rem;
+            margin-top: 12px;
+            border: 1px solid #eef2fa;
+            transition: 0.1s;
+        }
+
+        .form-title {
+            font-weight: 700;
+            font-size: 1.2rem;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #0f172a;
+            border-bottom: 2px solid #eef2ff;
+            padding-bottom: 12px;
+        }
+
+        .fields-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-bottom: 28px;
+        }
+
+        .form-field {
+            background: #fefefe;
+            padding: 4px 0;
+        }
+
+        .form-field label {
+            font-weight: 600;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .form-field input, .form-field textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 1rem;
+            font-size: 0.9rem;
+            transition: 0.2s;
+            font-family: inherit;
+        }
+
+        .form-field input:focus, .form-field textarea:focus {
+            outline: none;
+            border-color: #3b5bdb;
+            box-shadow: 0 0 0 3px rgba(59,91,219,0.1);
+        }
+
+        .form-field input.error {
+            border-color: #e53e3e;
+            background: #fff5f5;
+        }
+
+        .error-msg {
+            color: #e53e3e;
+            font-size: 0.7rem;
+            margin-top: 5px;
+            display: none;
         }
 
         .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
+            width: 36px;
+            height: 36px;
+            border: 3px solid #e2e8f0;
+            border-top: 3px solid #2c3e8f;
             border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
+            animation: spin 0.7s linear infinite;
+            margin: 12px auto;
         }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        .status {
-            margin-top: 20px;
-            padding: 12px;
-            background: #f7fafc;
-            border-radius: 10px;
-            font-size: 12px;
+        .status-footer {
+            margin-top: 24px;
+            font-size: 0.7rem;
             text-align: center;
-            color: #718096;
+            background: #f8fafc;
+            padding: 12px;
+            border-radius: 1rem;
+            color: #4a5568;
         }
 
-        .test-badge {
-            display: inline-block;
-            background: #ed8936;
-            color: white;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 10px;
-            margin-left: 8px;
-            vertical-align: middle;
+        .required-star {
+            color: #e53e3e;
         }
 
-        .debug-info {
-            font-family: monospace;
-            font-size: 11px;
-            margin-top: 10px;
-            padding: 8px;
-            background: #f1f5f9;
-            border-radius: 6px;
-            word-break: break-all;
+        hr {
+            margin: 14px 0;
+            border-color: #eef2fa;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="card">
-            <div class="header">
-                <h1>📊 Динамическая форма</h1>
-                <p>Интеграция с Google Sheets</p>
-            </div>
-            <div class="content">
-                <div class="config-section">
-                    <label>🔗 URL сервера n8n:</label>
-                    <input type="text" id="serverUrl" placeholder="https://ваш-сервер.n8n.io" value="">
-                    <small style="color: #718096;">
-                        Вставьте production URL из n8n (например: https://xxxxx.gw.dockhost.net)
-                    </small>
+<div class="container">
+    <div class="card">
+        <div class="header">
+            <h1>📋 Google Sheets <span style="font-weight: 400;">→</span> Умная форма</h1>
+            <p>Первая строка — заголовки (игнорируются) | Вторая строка → поля формы</p>
+            <div class="badge">✨ Авто-поля при новых ID во второй строке</div>
+        </div>
+        <div class="content">
+            <div class="config-panel">
+                <div class="input-group">
+                    <label>🔗 <span>URL n8n webhook (production)</span></label>
+                    <input type="text" id="serverUrl" placeholder="https://ваш-экземпляр.n8n.io" value="">
+                    <div class="info-hint">💡 Пример: https://xxxx.gw.dockhost.net (без слеша в конце)</div>
                 </div>
-
                 <div class="mode-switch">
-                    <button class="mode-btn active" onclick="setMode('remote')">🌐 Удаленный режим</button>
-                    <button class="mode-btn" onclick="setMode('test')">🧪 Тестовый режим</button>
+                    <button class="mode-btn active" id="modeRemoteBtn">🌐 Удаленный режим (Google Sheets)</button>
+                    <button class="mode-btn" id="modeTestBtn">🧪 Тест-режим (демо)</button>
                 </div>
-                
-                <div id="alert" class="alert"></div>
-                
-                <div class="info-box" id="infoBox">
-                    ⚡ Настройте URL сервера и нажмите "Загрузить поля"
+                <div class="action-bar">
+                    <button id="loadFieldsBtn" class="btn-primary">🔄 Загрузить поля из таблицы</button>
+                    <button id="resetFormBtn" class="btn-secondary">🗑 Очистить форму</button>
                 </div>
+                <div id="alertContainer" class="alert"></div>
+                <div id="infoBox" class="info-box">
+                    ⚙️ Инструкция: укажите URL сервера n8n ➜ нажмите «Загрузить поля».<br>
+                    <strong>📌 Логика:</strong> первая строка листа игнорируется (заголовки). ВСЕ ячейки <strong>второй строки</strong> (ID колонок) превращаются в поля формы.<br>
+                    🚀 Если во второй строке появляется новый ID — после повторной загрузки поле автоматически добавится.
+                </div>
+            </div>
 
-                <button onclick="loadFields()" class="btn-secondary" id="loadBtn">🔄 Загрузить поля</button>
-                
-                <div id="loading" style="display: none;">
-                    <div class="spinner"></div>
-                    <p style="text-align: center; margin-top: 10px;">Загрузка полей...</p>
+            <div id="loadingIndicator" style="display: none;">
+                <div class="spinner"></div>
+                <p style="text-align:center; font-size:0.85rem;">Получение структуры из Google Sheets...</p>
+            </div>
+
+            <div id="formContainer" style="display: none;">
+                <div class="form-card">
+                    <div class="form-title">
+                        <span>📝</span> Динамическая форма (поля из 2-й строки)
+                    </div>
+                    <form id="dynamicForm">
+                        <div id="fieldsRender" class="fields-grid"></div>
+                        <button type="submit" id="submitFormBtn" class="btn-primary" style="width:100%; justify-content:center;">💾 Отправить → Google Sheets (append)</button>
+                    </form>
                 </div>
-                
-                <form id="form" style="display: none;">
-                    <div id="fields"></div>
-                    <button type="submit" id="submitBtn">💾 Сохранить данные</button>
-                </form>
-                
-                <div class="status" id="status">
-                    Статус: ожидание настройки
-                </div>
-                <div id="debugInfo" class="debug-info" style="display: none;"></div>
+            </div>
+            <div class="status-footer" id="globalStatus">
+                Статус: ожидание настройки
             </div>
         </div>
     </div>
+</div>
 
-    <script>
-        let currentMode = 'remote';
-        let formFields = [];
-        let isSubmitting = false;
+<script>
+    // ---------- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ----------
+    let currentMode = 'remote';      // 'remote' или 'test'
+    let currentFields = [];           // массив объектов полей { id, label, type, required, placeholder }
+    let isSubmitting = false;
 
-        function getServerUrl() {
-            let url = document.getElementById('serverUrl').value.trim();
-            if (!url) {
-                showAlert('❌ Введите URL сервера n8n', 'error');
-                return null;
-            }
-            url = url.replace(/\/$/, '');
-            
-            if (!url.startsWith('http://') && !url.startsWith('https://')) {
-                url = 'https://' + url;
-            }
-            
-            return url;
-        }
+    // Тестовые поля (имитация "второй строки" с ID: email, name, phone, message)
+    const TEST_FIELDS = [
+        { id: "email", label: "Email", type: "email", required: true, placeholder: "user@example.com" },
+        { id: "name", label: "Полное имя", type: "text", required: true, placeholder: "Иван Петров" },
+        { id: "phone", label: "Телефон", type: "tel", required: true, placeholder: "+7 900 123-45-67" },
+        { id: "message", label: "Комментарий", type: "textarea", required: false, placeholder: "Ваше сообщение..." }
+    ];
 
-        function getUrls() {
-            const serverUrl = getServerUrl();
-            if (!serverUrl) return null;
-            return {
-                getFields: `${serverUrl}/webhook/get-fields`,
-                saveData: `${serverUrl}/webhook/save-data`
-            };
-        }
+    // DOM элементы
+    const serverUrlInput = document.getElementById('serverUrl');
+    const modeRemoteBtn = document.getElementById('modeRemoteBtn');
+    const modeTestBtn = document.getElementById('modeTestBtn');
+    const loadBtn = document.getElementById('loadFieldsBtn');
+    const resetFormBtn = document.getElementById('resetFormBtn');
+    const formContainer = document.getElementById('formContainer');
+    const loadingDiv = document.getElementById('loadingIndicator');
+    const fieldsRenderDiv = document.getElementById('fieldsRender');
+    const globalStatusSpan = document.getElementById('globalStatus');
+    const alertContainer = document.getElementById('alertContainer');
+    const infoBox = document.getElementById('infoBox');
+    const dynamicForm = document.getElementById('dynamicForm');
 
-        const TEST_FIELDS = [
-            { id: "email", label: "Email", type: "email", required: true, placeholder: "example@mail.com" },
-            { id: "name", label: "Имя", type: "text", required: true, placeholder: "Ваше имя" },
-            { id: "phone", label: "Телефон", type: "tel", required: true, placeholder: "+7 (999) 123-45-67" },
-            { id: "message", label: "Сообщение", type: "textarea", required: false, placeholder: "Ваше сообщение" }
-        ];
-
-        function setMode(mode) {
-            currentMode = mode;
-            const buttons = document.querySelectorAll('.mode-btn');
-            buttons.forEach(btn => {
-                if ((mode === 'remote' && btn.textContent.includes('Удаленный')) ||
-                    (mode === 'test' && btn.textContent.includes('Тестовый'))) {
-                    btn.classList.add('active');
-                } else {
-                    btn.classList.remove('active');
-                }
-            });
-            
-            if (mode === 'test') {
-                document.getElementById('infoBox').innerHTML = '🧪 Тестовый режим: используются демо-поля <span class="test-badge">Данные не сохраняются</span>';
-                loadTestFields();
-            } else {
-                document.getElementById('infoBox').innerHTML = '🌐 Удаленный режим: введите URL и нажмите "Загрузить поля"';
-                document.getElementById('form').style.display = 'none';
-                document.getElementById('status').innerHTML = 'Статус: удаленный режим, ожидание настройки';
-            }
-        }
-
-        function showAlert(msg, type) {
-            const alertDiv = document.getElementById('alert');
-            alertDiv.className = `alert alert-${type}`;
-            alertDiv.innerHTML = msg;
-            alertDiv.style.display = 'block';
+    // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
+    function showAlert(message, type) {
+        alertContainer.className = `alert alert-${type}`;
+        alertContainer.innerHTML = message;
+        alertContainer.style.display = 'block';
+        setTimeout(() => {
+            alertContainer.style.opacity = '0';
             setTimeout(() => {
-                alertDiv.style.opacity = '0';
-                setTimeout(() => {
-                    alertDiv.style.display = 'none';
-                    alertDiv.style.opacity = '1';
-                }, 300);
-            }, 5000);
-        }
+                alertContainer.style.display = 'none';
+                alertContainer.style.opacity = '1';
+            }, 280);
+        }, 4800);
+    }
 
-        function showLoading(show) {
-            document.getElementById('loading').style.display = show ? 'block' : 'none';
-            document.getElementById('loadBtn').disabled = show;
-        }
+    function setGlobalStatus(text, isError = false) {
+        globalStatusSpan.innerHTML = `📡 ${text}`;
+        if (isError) globalStatusSpan.style.color = '#b91c1c';
+        else globalStatusSpan.style.color = '#2c3e8f';
+    }
 
-        function renderForm(fields) {
-            const container = document.getElementById('fields');
-            container.innerHTML = '';
-            
-            fields.forEach((field, index) => {
-                const div = document.createElement('div');
-                div.className = 'form-group';
-                const requiredMark = field.required ? '<span style="color:#f56565"> *</span>' : '';
-                
-                let inputHtml = '';
-                if (field.type === 'textarea') {
-                    inputHtml = `<textarea id="${field.id}" placeholder="${field.placeholder || ''}" rows="4"></textarea>`;
-                } else if (field.type === 'select' && field.options) {
-                    inputHtml = `<select id="${field.id}">
-                        <option value="">Выберите...</option>
-                        ${field.options.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
-                    </select>`;
-                } else {
-                    inputHtml = `<input type="${field.type || 'text'}" id="${field.id}" placeholder="${field.placeholder || ''}" ${field.required ? 'required' : ''}>`;
-                }
-                
-                div.innerHTML = `
-                    <label>${field.label}${requiredMark}</label>
-                    ${inputHtml}
-                    <div class="error-message" id="${field.id}-error"></div>
-                `;
-                container.appendChild(div);
-                
-                const input = document.getElementById(field.id);
-                if (input) {
-                    input.addEventListener('input', () => validateField(field.id));
-                    input.addEventListener('blur', () => validateField(field.id));
-                }
-            });
-        }
+    function setLoading(visible) {
+        loadingDiv.style.display = visible ? 'flex' : 'none';
+        loadBtn.disabled = visible;
+    }
 
-        function validateField(fieldId) {
-            const input = document.getElementById(fieldId);
-            const errorDiv = document.getElementById(`${fieldId}-error`);
-            const field = formFields.find(f => f.id === fieldId);
-            
-            if (!input || !field) return true;
-            
-            const value = input.value.trim();
-            let isValid = true;
-            let msg = '';
-            
-            if (field.required && !value) {
-                isValid = false;
-                msg = '⚠️ Обязательное поле';
-            } else if (field.type === 'email' && value && !/^[^\s@]+@([^\s@]+\.)+[^\s@]+$/.test(value)) {
-                isValid = false;
-                msg = '❌ Неверный формат email';
-            } else if (field.type === 'tel' && value && !/^[\d\s+()-]{10,}$/.test(value)) {
-                isValid = false;
-                msg = '❌ Неверный формат телефона';
-            }
-            
-            if (!isValid) {
-                input.classList.add('error');
-                errorDiv.textContent = msg;
-                errorDiv.style.display = 'block';
+    // Отрисовка формы на основе currentFields
+    function renderForm() {
+        if (!currentFields || currentFields.length === 0) {
+            formContainer.style.display = 'none';
+            return;
+        }
+        formContainer.style.display = 'block';
+        fieldsRenderDiv.innerHTML = '';
+        currentFields.forEach((field, idx) => {
+            const fieldDiv = document.createElement('div');
+            fieldDiv.className = 'form-field';
+            const requiredMark = field.required ? '<span class="required-star">*</span>' : '';
+            let inputHtml = '';
+            if (field.type === 'textarea') {
+                inputHtml = `<textarea id="field_${field.id}" placeholder="${field.placeholder || ''}" rows="3" ${field.required ? 'required' : ''}></textarea>`;
             } else {
-                input.classList.remove('error');
-                errorDiv.style.display = 'none';
+                inputHtml = `<input type="${field.type}" id="field_${field.id}" placeholder="${field.placeholder || ''}" ${field.required ? 'required' : ''}>`;
             }
-            
-            return isValid;
-        }
-
-        function validateForm() {
-            let valid = true;
-            formFields.forEach(f => {
-                if (!validateField(f.id)) valid = false;
-            });
-            return valid;
-        }
-
-        function getFormData() {
-            const data = {};
-            formFields.forEach(f => {
-                const input = document.getElementById(f.id);
-                if (input) {
-                    data[f.id] = input.value.trim();
-                }
-            });
-            return data;
-        }
-
-        async function loadRemoteFields() {
-            const urls = getUrls();
-            if (!urls) throw new Error('URL не указан');
-            
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 15000);
-            
-            try {
-                console.log('Fetching from:', urls.getFields);
-                
-                const response = await fetch(urls.getFields, {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json'
-                    },
-                    signal: controller.signal,
-                    mode: 'cors'
-                });
-                
-                clearTimeout(timeoutId);
-                
-                console.log('Response status:', response.status);
-                console.log('Response headers:', [...response.headers.entries()]);
-                
-                if (!response.ok) {
-                    if (response.status === 404) {
-                        throw new Error('Webhook не найден (404). Проверьте:\n• Правильность пути /webhook/get-fields\n• Активирован ли webhook в n8n\n• URL сервера');
-                    }
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                
-                // Получаем текст ответа
-                const responseText = await response.text();
-                console.log('Response text:', responseText);
-                
-                // Проверяем, не пустой ли ответ
-                if (!responseText || responseText.trim() === '') {
-                    throw new Error('Сервер вернул пустой ответ. Проверьте настройки webhook в n8n');
-                }
-                
-                // Парсим JSON
-                let data;
-                try {
-                    data = JSON.parse(responseText);
-                } catch (e) {
-                    console.error('JSON parse error:', e);
-                    throw new Error(`Сервер вернул некорректный JSON: ${responseText.substring(0, 200)}`);
-                }
-                
-                // Преобразуем данные в формат полей
-                let fields = [];
-                
-                if (Array.isArray(data)) {
-                    fields = data.map(item => ({
-                        id: item.id || item.name || item.field,
-                        label: item.label || item.name || item.id || 'Поле',
-                        type: item.type || 'text',
-                        required: item.required || false,
-                        placeholder: item.placeholder || ''
-                    }));
-                } else if (data.fields && Array.isArray(data.fields)) {
-                    fields = data.fields;
-                } else if (data.data && Array.isArray(data.data)) {
-                    fields = data.data;
-                } else if (typeof data === 'object' && data !== null) {
-                    // Если пришел объект с данными, берем ключи как поля
-                    const keys = Object.keys(data);
-                    if (keys.length > 0 && typeof data[keys[0]] !== 'object') {
-                        fields = keys.map(key => ({
-                            id: key,
-                            label: key.charAt(0).toUpperCase() + key.slice(1),
-                            type: 'text',
-                            required: false,
-                            placeholder: `Введите ${key}`
-                        }));
-                    } else {
-                        fields = keys.map(key => ({
-                            id: key,
-                            label: key,
-                            type: 'text',
-                            required: false
-                        }));
-                    }
-                }
-                
-                if (!fields || fields.length === 0) {
-                    throw new Error('Нет полей для отображения. Убедитесь, что в Google Sheets есть данные');
-                }
-                
-                return fields;
-                
-            } catch (err) {
-                clearTimeout(timeoutId);
-                if (err.name === 'AbortError') {
-                    throw new Error('Превышен таймаут (15 сек). Проверьте доступность сервера и настройки CORS');
-                }
-                throw err;
+            fieldDiv.innerHTML = `
+                <label>${escapeHtml(field.label)} ${requiredMark}</label>
+                ${inputHtml}
+                <div class="error-msg" id="error_${field.id}"></div>
+            `;
+            fieldsRenderDiv.appendChild(fieldDiv);
+            // добавить валидацию событий
+            const inputEl = document.getElementById(`field_${field.id}`);
+            if (inputEl) {
+                inputEl.addEventListener('input', () => validateSingleField(field.id));
+                inputEl.addEventListener('blur', () => validateSingleField(field.id));
             }
-        }
-
-        async function loadTestFields() {
-            showLoading(true);
-            try {
-                formFields = TEST_FIELDS;
-                renderForm(formFields);
-                document.getElementById('infoBox').innerHTML = `🧪 Тестовый режим: загружено ${formFields.length} полей <span class="test-badge">Данные не сохраняются</span>`;
-                document.getElementById('status').innerHTML = `✅ Тестовый режим: ${formFields.length} полей (демо-данные)`;
-                document.getElementById('form').style.display = 'block';
-                showAlert('✅ Тестовые поля загружены. Данные не будут отправлены на сервер.', 'success');
-            } catch (err) {
-                showAlert(`❌ Ошибка: ${err.message}`, 'error');
-            } finally {
-                showLoading(false);
-            }
-        }
-
-        async function loadFields() {
-            if (currentMode === 'test') {
-                await loadTestFields();
-                return;
-            }
-            
-            const serverUrl = getServerUrl();
-            if (!serverUrl) return;
-            
-            showLoading(true);
-            document.getElementById('infoBox').innerHTML = '🔄 Загрузка полей из Google Sheets...';
-            document.getElementById('debugInfo').style.display = 'none';
-            
-            try {
-                formFields = await loadRemoteFields();
-                
-                if (!formFields || formFields.length === 0) {
-                    throw new Error('Нет полей для отображения');
-                }
-                
-                renderForm(formFields);
-                document.getElementById('infoBox').innerHTML = `✅ Загружено ${formFields.length} полей из Google Sheets`;
-                document.getElementById('status').innerHTML = `✅ Подключено к ${serverUrl} | ${formFields.length} полей`;
-                document.getElementById('form').style.display = 'block';
-                showAlert(`✅ Форма загружена (${formFields.length} полей)`, 'success');
-                
-            } catch (err) {
-                console.error('Load error:', err);
-                let errorMsg = err.message;
-                
-                if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
-                    errorMsg = '❌ Не удалось подключиться к серверу.\n\nПроверьте:\n• Правильность URL (должен начинаться с http:// или https://)\n• Доступен ли сервер из браузера (откройте URL в новой вкладке)\n• Активен ли webhook в n8n (должен быть зеленый индикатор)\n• Настроены ли CORS заголовки в n8n';
-                } else if (err.message.includes('пустой ответ')) {
-                    errorMsg = '❌ ' + err.message + '\n\nВ n8n webhook должен возвращать JSON. Проверьте код в узле "Format Fields"';
-                } else if (err.message.includes('некорректный JSON')) {
-                    errorMsg = '❌ ' + err.message;
-                } else if (err.message.includes('404')) {
-                    errorMsg = '❌ ' + err.message + '\n\nУбедитесь, что путь webhook: /webhook/get-fields';
-                }
-                
-                document.getElementById('infoBox').innerHTML = errorMsg.replace(/\n/g, '<br>');
-                document.getElementById('status').innerHTML = `❌ Ошибка: ${err.message}`;
-                
-                // Показываем отладочную информацию
-                const debugDiv = document.getElementById('debugInfo');
-                debugDiv.innerHTML = `🔍 Отладка:<br>URL: ${serverUrl}<br>Полный адрес: ${serverUrl}/webhook/get-fields<br>Ошибка: ${err.message}<br>Время: ${new Date().toLocaleString()}`;
-                debugDiv.style.display = 'block';
-                
-                showAlert(`❌ Ошибка загрузки: ${err.message.split('\n')[0]}`, 'error');
-                document.getElementById('form').style.display = 'none';
-            } finally {
-                showLoading(false);
-            }
-        }
-
-        async function submitForm(e) {
-            e.preventDefault();
-            
-            if (isSubmitting) return;
-            
-            if (!validateForm()) {
-                showAlert('❌ Пожалуйста, исправьте ошибки в форме', 'error');
-                return;
-            }
-            
-            if (currentMode === 'test') {
-                const data = getFormData();
-                console.log('Test mode data:', data);
-                showAlert('🧪 Тестовый режим: данные не отправлены, форма очищена', 'success');
-                formFields.forEach(f => {
-                    const inp = document.getElementById(f.id);
-                    if (inp) inp.value = '';
-                });
-                return;
-            }
-            
-            const urls = getUrls();
-            if (!urls) return;
-            
-            isSubmitting = true;
-            const btn = document.getElementById('submitBtn');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '⏳ Сохранение...';
-            btn.disabled = true;
-            
-            try {
-                const formData = getFormData();
-                
-                const response = await fetch(urls.saveData, {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify(formData)
-                });
-                
-                if (!response.ok) {
-                    let errorMsg = `HTTP ${response.status}`;
-                    try {
-                        const errorText = await response.text();
-                        if (errorText) {
-                            const errorData = JSON.parse(errorText);
-                            errorMsg = errorData.message || errorData.error || errorText;
-                        }
-                    } catch (e) {
-                        errorMsg = await response.text() || errorMsg;
-                    }
-                    throw new Error(errorMsg);
-                }
-                
-                const responseText = await response.text();
-                let result;
-                try {
-                    result = responseText ? JSON.parse(responseText) : { success: true };
-                } catch (e) {
-                    result = { success: true, message: 'Data saved' };
-                }
-                
-                if (result.success === false) {
-                    throw new Error(result.message || 'Ошибка сохранения');
-                }
-                
-                showAlert('✅ Данные успешно сохранены в Google Sheets!', 'success');
-                
-                // Очищаем форму
-                formFields.forEach(f => {
-                    const inp = document.getElementById(f.id);
-                    if (inp) inp.value = '';
-                });
-                
-            } catch (err) {
-                console.error('Submit error:', err);
-                let errorMsg = err.message;
-                if (err.message.includes('Failed to fetch')) {
-                    errorMsg = 'Не удалось отправить данные. Проверьте CORS настройки в n8n и доступность сервера';
-                }
-                showAlert(`❌ Ошибка сохранения: ${errorMsg}`, 'error');
-            } finally {
-                isSubmitting = false;
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            }
-        }
-
-        // Инициализация
-        document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('form').addEventListener('submit', submitForm);
-            
-            const savedUrl = localStorage.getItem('n8n_server_url');
-            if (savedUrl) {
-                document.getElementById('serverUrl').value = savedUrl;
-            }
-            
-            document.getElementById('serverUrl').addEventListener('change', () => {
-                localStorage.setItem('n8n_server_url', document.getElementById('serverUrl').value);
-            });
         });
-    </script>
+    }
+
+    function escapeHtml(str) { 
+        if(!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if(m === '&') return '&amp;';
+            if(m === '<') return '&lt;';
+            if(m === '>') return '&gt;';
+            return m;
+        }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
+            return c;
+        });
+    }
+
+    function validateSingleField(fieldId) {
+        const field = currentFields.find(f => f.id === fieldId);
+        if (!field) return true;
+        const input = document.getElementById(`field_${field.id}`);
+        const errorDiv = document.getElementById(`error_${field.id}`);
+        if (!input) return true;
+        let value = input.value.trim();
+        let isValid = true;
+        let errorMsg = '';
+
+        if (field.required && !value) {
+            isValid = false;
+            errorMsg = 'Обязательное поле';
+        } else if (field.type === 'email' && value && !/^[^\s@]+@([^\s@]+\.)+[^\s@]+$/.test(value)) {
+            isValid = false;
+            errorMsg = 'Введите корректный email';
+        } else if (field.type === 'tel' && value && !/^[\d\s+()-\u00A0-\uD7FF]{8,}$/.test(value.replace(/\s/g, ''))) {
+            // упрощенная валидация телефона
+            const phoneDigits = value.replace(/[^\d+]/g, '');
+            if (phoneDigits.length < 6) {
+                isValid = false;
+                errorMsg = 'Некорректный номер телефона';
+            }
+        }
+        if (!isValid) {
+            input.classList.add('error');
+            errorDiv.textContent = errorMsg;
+            errorDiv.style.display = 'block';
+        } else {
+            input.classList.remove('error');
+            errorDiv.style.display = 'none';
+        }
+        return isValid;
+    }
+
+    function validateFullForm() {
+        let valid = true;
+        currentFields.forEach(f => {
+            if (!validateSingleField(f.id)) valid = false;
+        });
+        return valid;
+    }
+
+    function resetFormValues() {
+        if (!currentFields.length) return;
+        currentFields.forEach(f => {
+            const inp = document.getElementById(`field_${f.id}`);
+            if (inp) inp.value = '';
+            const errorDiv = document.getElementById(`error_${f.id}`);
+            if (errorDiv) {
+                errorDiv.style.display = 'none';
+                errorDiv.textContent = '';
+            }
+            if (inp) inp.classList.remove('error');
+        });
+        showAlert('🧹 Форма очищена', 'success');
+    }
+
+    // ========== ПОЛУЧЕНИЕ ПОЛЕЙ ИЗ GOOGLE SHEETS (n8n webhook) ==========
+    // Согласно архитектуре: webhook GET /get-fields -> читает Google Sheets (игнорирует первую строку, берет вторую строку как ID/названия полей)
+    // Ожидаемый ответ от n8n: массив объектов [{ id: "email", label: "Email", type: "text", required: true }] или { fields: [...] }
+    // Для гибкости также поддерживаем простой массив строк -> конвертируем в объекты.
+    async function fetchFieldsFromSheets() {
+        let serverUrl = serverUrlInput.value.trim();
+        if (!serverUrl) {
+            throw new Error('Укажите URL сервера n8n');
+        }
+        serverUrl = serverUrl.replace(/\/$/, '');
+        const getFieldsUrl = `${serverUrl}/webhook/get-fields`;
+        
+        const response = await fetch(getFieldsUrl, {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' }
+        });
+        if (!response.ok) {
+            let errMsg = `HTTP ${response.status}`;
+            try {
+                const text = await response.text();
+                errMsg = text.substring(0, 120);
+            } catch(e) {}
+            throw new Error(`Ошибка запроса: ${errMsg}`);
+        }
+        let data = await response.json();
+        // нормализуем структуру полей
+        let fieldsArray = null;
+        if (Array.isArray(data)) fieldsArray = data;
+        else if (data.fields && Array.isArray(data.fields)) fieldsArray = data.fields;
+        else if (data.data && Array.isArray(data.data)) fieldsArray = data.data;
+        
+        if (!fieldsArray) {
+            throw new Error('Неожиданный формат ответа от сервера (ожидается массив полей)');
+        }
+        // преобразуем каждый элемент к единому виду { id, label, type, required, placeholder }
+        const normalized = fieldsArray.map((item, idx) => {
+            if (typeof item === 'string') {
+                return {
+                    id: item,
+                    label: item.charAt(0).toUpperCase() + item.slice(1),
+                    type: 'text',
+                    required: false,
+                    placeholder: `Введите ${item}`
+                };
+            }
+            return {
+                id: item.id || item.name || `field_${idx}`,
+                label: item.label || item.id || item.name || 'Поле',
+                type: item.type || (item.inputType === 'email' ? 'email' : (item.inputType === 'tel' ? 'tel' : 'text')),
+                required: item.required === true,
+                placeholder: item.placeholder || ''
+            };
+        });
+        if (normalized.length === 0) throw new Error('Таблица вернула 0 полей (возможно, вторая строка пуста)');
+        return normalized;
+    }
+
+    // ========== ЗАГРУЗКА ПОЛЕЙ (ОСНОВНАЯ) ==========
+    async function loadFieldsFromRemote() {
+        setLoading(true);
+        setGlobalStatus('Загрузка полей из Google Sheets (вторая строка)...');
+        try {
+            const fields = await fetchFieldsFromSheets();
+            if (!fields.length) throw new Error('Нет полей для отображения');
+            currentFields = fields;
+            renderForm();
+            setGlobalStatus(`✅ Загружено ${currentFields.length} полей (игнорируя первую строку). Webhook активен.`);
+            showAlert(`✅ Форма обновлена: ${currentFields.length} полей из второй строки таблицы`, 'success');
+            infoBox.innerHTML = `✅ Успешно! Поля сформированы из второй строки Google Sheets. <br> 📌 При добавлении нового ID во вторую строку — нажмите "Загрузить поля", и элемент появится автоматически.`;
+        } catch (err) {
+            console.error('Load error:', err);
+            setGlobalStatus(`Ошибка: ${err.message}`, true);
+            showAlert(`❌ Не удалось загрузить поля: ${err.message}`, 'error');
+            infoBox.innerHTML = `⚠️ Ошибка подключения. Проверьте:<br>• URL n8n корректен и webhook активен<br>• В Google Sheets есть хотя бы ДВЕ строки (первая — заголовки, вторая — ID полей)<br>• CORS заголовки настроены в n8n (Access-Control-Allow-Origin)`;
+            formContainer.style.display = 'none';
+            currentFields = [];
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    // Тестовый режим
+    function loadTestMode() {
+        currentFields = JSON.parse(JSON.stringify(TEST_FIELDS));
+        renderForm();
+        setGlobalStatus(`🧪 Тестовый режим: поля из демо-набора (${currentFields.length} полей)`, false);
+        showAlert('Тестовый режим активен. Данные никуда не отправляются (имитация).', 'success');
+        infoBox.innerHTML = `🧪 ТЕСТОВЫЙ РЕЖИМ: поля сгенерированы локально. Для реальной работы переключитесь в "Удаленный режим" и укажите URL n8n.`;
+    }
+
+    // ========== ОТПРАВКА ДАННЫХ (POST webhook) ==========
+    async function submitFormData(event) {
+        event.preventDefault();
+        if (currentMode === 'test') {
+            // тест: просто очищаем и показываем сообщение
+            if (!validateFullForm()) {
+                showAlert('❌ Исправьте ошибки в тестовой форме', 'error');
+                return;
+            }
+            showAlert('🧪 Тестовый режим: данные НЕ отправлены, но форма валидна. Очистка...', 'success');
+            resetFormValues();
+            return;
+        }
+        // Удаленный режим -> отправка на /webhook/save-data
+        if (isSubmitting) return;
+        if (!validateFullForm()) {
+            showAlert('❌ Пожалуйста, исправьте ошибки в форме', 'error');
+            return;
+        }
+        let serverUrl = serverUrlInput.value.trim();
+        if (!serverUrl) {
+            showAlert('❌ Укажите URL сервера n8n перед отправкой', 'error');
+            return;
+        }
+        serverUrl = serverUrl.replace(/\/$/, '');
+        const saveUrl = `${serverUrl}/webhook/save-data`;
+
+        // Собираем данные в формате, ожидаемом n8n (массив объектов с id и value)
+        const payload = [];
+        for (const field of currentFields) {
+            const inputEl = document.getElementById(`field_${field.id}`);
+            if (inputEl) {
+                payload.push({
+                    id: field.id,
+                    value: inputEl.value.trim(),
+                    label: field.label
+                });
+            }
+        }
+        isSubmitting = true;
+        const submitBtn = document.getElementById('submitFormBtn');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '⏳ Отправка...';
+        submitBtn.disabled = true;
+
+        try {
+            const response = await fetch(saveUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({ fields: payload, timestamp: new Date().toISOString() })
+            });
+            if (!response.ok) {
+                let errorText = await response.text();
+                throw new Error(`HTTP ${response.status}: ${errorText.slice(0, 100)}`);
+            }
+            const result = await response.json();
+            if (result.success === false) throw new Error(result.message || 'Ошибка сохранения');
+            showAlert('✅ Данные успешно добавлены в Google Sheets (append)!', 'success');
+            resetFormValues(); // очищаем после успешной отправки
+        } catch (err) {
+            console.error('Submit error:', err);
+            showAlert(`❌ Ошибка сохранения: ${err.message}`, 'error');
+        } finally {
+            isSubmitting = false;
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }
+    }
+
+    // ========== УПРАВЛЕНИЕ РЕЖИМАМИ ==========
+    function setMode(mode) {
+        currentMode = mode;
+        if (mode === 'remote') {
+            modeRemoteBtn.classList.add('active');
+            modeTestBtn.classList.remove('active');
+            if (serverUrlInput.value.trim() === '') {
+                infoBox.innerHTML = `🌐 Удаленный режим: введите URL сервера n8n и нажмите "Загрузить поля". Первая строка таблицы игнорируется, поля формируются из второй строки.`;
+            } else {
+                infoBox.innerHTML = `🌐 Удаленный режим активен. Нажмите "Загрузить поля", чтобы получить актуальную структуру из Google Sheets (2-я строка).`;
+            }
+            // если уже были поля в тесте, сбрасываем визуал, но не удаляем, ждём загрузки
+            if (currentFields.length > 0 && currentFields !== TEST_FIELDS) {
+                // оставляем как есть, но лучше перезапросить вручную
+            } else {
+                formContainer.style.display = 'none';
+                currentFields = [];
+            }
+        } else {
+            modeTestBtn.classList.add('active');
+            modeRemoteBtn.classList.remove('active');
+            loadTestMode();
+        }
+        setGlobalStatus(`Режим: ${mode === 'remote' ? 'Удаленный (Google Sheets)' : 'Тестовый'}`);
+    }
+
+    // инициализация и обработчики
+    function init() {
+        // загружаем сохраненный URL
+        const savedUrl = localStorage.getItem('n8n_server_url');
+        if (savedUrl) serverUrlInput.value = savedUrl;
+        serverUrlInput.addEventListener('change', () => {
+            localStorage.setItem('n8n_server_url', serverUrlInput.value.trim());
+        });
+        modeRemoteBtn.addEventListener('click', () => setMode('remote'));
+        modeTestBtn.addEventListener('click', () => setMode('test'));
+        loadBtn.addEventListener('click', () => {
+            if (currentMode === 'remote') loadFieldsFromRemote();
+            else loadTestMode();
+        });
+        resetFormBtn.addEventListener('click', () => {
+            if (currentFields.length) resetFormValues();
+            else showAlert('Нет активной формы', 'error');
+        });
+        dynamicForm.addEventListener('submit', submitFormData);
+        setMode('remote'); // по умолчанию удаленный, но без загрузки
+    }
+    init();
+</script>
 </body>
 </html>
